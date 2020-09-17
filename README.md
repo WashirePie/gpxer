@@ -1,6 +1,7 @@
 # gpxer
 
-Turn gpx strings into JS objects
+Turn gpx strings into JS objects.
+Written in pure, ES6 JavaScript. [p5.js](https://p5js.org/) was used for some minor visualizing tasks.
 
 
 ## General GPX Structure
