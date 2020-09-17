@@ -13,9 +13,11 @@ class GPXConverter
 
         converted["RawGPX"] = xml;
         
+        /* Functions for retrieving the main Types */
         converted.getWaypoints = () => { return converted.content.find(o => o instanceof GPXWaypoint); }
         converted.getRoutes = () => { return converted.content.find(o => o instanceof GPXRoute); }
         converted.getTours = () => { return converted.content.find(o => o instanceof GPXTour); }
+        converted.getMeta = () => { return converted.content.find(o => o instanceof GPXMetadata); }
 
         return converted;
     }
