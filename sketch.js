@@ -2,25 +2,10 @@ const Background = 51
 let G;
 let R;
 
-let maxLat;
-let minLat;
-let maxLon;
-let minLon;
-
-
 function setup()
 {
   G = GPXConverter.parse(testGpxString2);
-  R = G.getRoutes();
-
-  console.log(R.content);
-
-  maxLat = R.content.reduce((p, c) => p.attributes.lat > c.attributes.lat ? p : c).attributes.lat;
-  minLat = R.content.reduce((p, c) => p.attributes.lat < c.attributes.lat ? p : c).attributes.lat;
-  maxLon = R.content.reduce((p, c) => p.attributes.lon > c.attributes.lon ? p : c).attributes.lon;
-  minLon = R.content.reduce((p, c) => p.attributes.lon < c.attributes.lon ? p : c).attributes.lon;
-
-  console.log(G);
+  R = G.routes;
 
   createCanvas(window.innerWidth, window.innerHeight);
 }
@@ -38,14 +23,16 @@ function draw()
   beginShape();
   R.content.forEach(rtept =>
   {
-    let x = map(rtept.attributes.lon, minLon, maxLon, 0, canvasSize);
-    let y = map(rtept.attributes.lat, minLat, maxLat, canvasSize, 0);
+    let x = map(rtept.attributes.lon, R.minLon, R.maxLon, 0, canvasSize);
+    let y = map(rtept.attributes.lat, R.minLat, R.maxLat, canvasSize, 0);
     vertex(x, y);
   });
   endShape();
+
+  noLoop();
 }
 
-COMBAK
+
 
 class GPXHikeAnalysis
 {

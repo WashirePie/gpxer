@@ -1,3 +1,19 @@
+/* Adapter class for GPXHead */
+class GPX 
+{
+    constructor(gpxHead, xml)
+    {
+        if (!gpxHead instanceof GPXHead) throw GPXConverter.e(`received an obj of type '${conv.constructor.name}' instead of 'GPXHead'!`);
+
+        this.waypoints = gpxHead.content.find(o => o instanceof GPXWaypoint); 
+        this.metadata = gpxHead.content.find(o => o instanceof GPXMetadata);
+        this.tracks = gpxHead.content.find(o => o instanceof GPXTrack);
+        this.routes = gpxHead.content.find(o => o instanceof GPXRoute);
+        this.rawXml = xml;
+    }
+}
+
+
 class GPXConverter 
 {
     static e = (msg) => { console.error(`GPXConverter Error - ${msg}`); }
@@ -7,28 +23,17 @@ class GPXConverter
     static parse = (gpxString) =>
     {
         const xmlParser = new DOMParser();
-
-        let xml = xmlParser.parseFromString(gpxString, "text/xml");
-        let converted = GPXConverter.walk(xml.getElementsByTagName('gpx')[0]);
-
-        converted["RawGPX"] = xml;
         
-        /* Functions for retrieving the main Types */
-        converted.getWaypoints = () => { return converted.content.find(o => o instanceof GPXWaypoint); }
-        converted.getRoutes = () => { return converted.content.find(o => o instanceof GPXRoute); }
-        converted.getTours = () => { return converted.content.find(o => o instanceof GPXTour); }
-        converted.getMeta = () => { return converted.content.find(o => o instanceof GPXMetadata); }
+        let xml = xmlParser.parseFromString(gpxString, "text/xml");
+        let conv = GPXConverter.walk(xml.getElementsByTagName('gpx')[0]);
 
-        return converted;
+        return new GPX(conv, xml);
     }
 
 
     static walk = (element) =>
     {
-        /* Get type and - if available - attributes */
         let obj = GPXBuilder.build(element);
-
-        /* Skip, if an unkown element was found */
         if (!obj) return null;
 
         obj.attributes = GPXConverter.attributesToObj(element);
