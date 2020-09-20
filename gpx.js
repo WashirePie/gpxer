@@ -57,6 +57,9 @@ class GPXConverter
 
         obj.validate();
 
+        /* Turns .values properties into attributes and deletes .values property */
+        if (obj.hasOwnProperty('valuesToAttributes')) obj.valuesToAttributes();
+
         return obj;
     }
 

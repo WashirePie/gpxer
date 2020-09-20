@@ -18,8 +18,8 @@ class GPXBuilder
             case 'rtept':         return new GPXRoutePoint();
 
             /* Params */
-            case 'ele':           return new GPXElevationParam(element.innerHTML);
-            case 'time':          return new GPXTimeParam(element.innerHTML);
+            case 'ele':           return new GPXElevationParam(parseFloat(element.innerHTML, 10));
+            case 'time':          return new GPXTimeParam(new Date(element.innerHTML));
             case 'geoidheight':   return new GPXGeoIDHeightParam(element.innerHTML);
             case 'name':          return new GPXNameParam(element.innerHTML);
             case 'number':        return new GPXNumberParam(element.innerHTML);
@@ -298,6 +298,17 @@ class GPXType
             } 
         });
     }
+
+    valuesToAttributes = () =>
+    {
+        for (let i = 0; i < this.values.length; i++)
+        {
+            let v = this.values[i];
+            this.attributes[v.tagName] = v[v.tagName];
+        }
+
+        delete this.values;
+    }
 }
 
 
@@ -310,22 +321,69 @@ class GPXParentType extends GPXType
     }
 
     
-    get distance()
+    get getDistance()
     {
         let d = 0;
 
-        if ('distance' in this.content[0])
+        if (this.content.every(o => o instanceof GPXParentType))
         {
             this.content.forEach(e => d += e.distance);
         }
         else
         {
             for (let i = 0; i < this.content.length - 1; i++) d += this.content[i].haverSine(this.content[i + 1]);
-                    
         }
 
         return d;
     }
+
+    getExtrema = (attr) =>
+    {
+        let r = {};
+        let propName = attr[0].toUpperCase() + attr.slice(1);
+
+        if (this.content.every(o => o instanceof GPXParentType))
+        {
+            throw "Not yet implemented";
+        }
+        else
+        {
+            let min = Number.POSITIVE_INFINITY;
+            let max = Number.NEGATIVE_INFINITY;
+
+            for (let i = 0; i < this.content.length; i++)
+            {
+                let current = this.content[i].attributes[attr];
+
+                if (current > max) max = current;
+                if (current < min) min = current;
+            }
+            r[`max${propName}`] = max;
+            r[`min${propName}`] = min; 
+        }
+
+        return r;
+    }
+
+    /* Somehow this version of getExtrema which uses Array.prototype.reduce() won't return the true extremas... */
+
+    // getExtrema = (attr) =>
+    // {
+    //     let r = {};
+    //     let propName = attr[0].toUpperCase() + attr.slice(1);
+
+    //     if (this.content.every(o => o instanceof GPXParentType))
+    //     {
+    //         throw "Not yet implemented";
+    //     }
+    //     else
+    //     {
+    //         r[`max${propName}`] = this.content.reduce((p, c) => p.attributes[attr] > c.attributes[attr] ? p : c).attributes[attr];
+    //         r[`min${propName}`] = this.content.reduce((p, c) => p.attributes[attr] < c.attributes[attr] ? p : c).attributes[attr]; 
+    //     }
+
+    //     return r;
+    // }
 }
 
 

@@ -63,6 +63,9 @@ to validate the type.
 
 ### Params
 
+### **[Deprecated]**
+*As of now, params will be converted into properties in the `GPXAttributes` object property*
+
 Secondary elements, which are standalone elements (in that they cannot contain any child elements ) such as: 
 ```xml
 <ele>4107.1</ele>
