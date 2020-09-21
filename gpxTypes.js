@@ -63,7 +63,7 @@ class GPXParam
     { 
         this.tagName = name;
         this[name] = obj;
-        if (obj == "") GPXConverter.w(`empty ${this.constructor.name} with name '${tagName}' was created`);
+        if (obj == "") GPXConverter.w(`empty ${this.constructor.name} with name '${this.tagName}' was created`);
     }
 
     validate = () => { }
@@ -342,15 +342,20 @@ class GPXParentType extends GPXType
         let r = {};
         let propName = attr[0].toUpperCase() + attr.slice(1);
 
+        let min = Number.POSITIVE_INFINITY;
+        let max = Number.NEGATIVE_INFINITY;
+        
         if (this.content.every(o => o instanceof GPXParentType))
         {
-            throw "Not yet implemented";
+            this.content.forEach(o =>
+            {
+                let current = o.getExtrema(attr);
+                max = current[`max${propName}`] > max ? current[`max${propName}`] : max;
+                min = current[`min${propName}`] < min ? current[`min${propName}`] : min;
+            });
         }
         else
         {
-            let min = Number.POSITIVE_INFINITY;
-            let max = Number.NEGATIVE_INFINITY;
-
             for (let i = 0; i < this.content.length; i++)
             {
                 let current = this.content[i].attributes[attr];
@@ -358,9 +363,10 @@ class GPXParentType extends GPXType
                 if (current > max) max = current;
                 if (current < min) min = current;
             }
-            r[`max${propName}`] = max;
-            r[`min${propName}`] = min; 
         }
+    
+        r[`max${propName}`] = max;
+        r[`min${propName}`] = min; 
 
         return r;
     }

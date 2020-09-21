@@ -2,6 +2,7 @@
 {
   margin: 0; 
   padding: 0;
+  background-color: rgba(53, 53, 53, 255);
 }
 
 h1, h4, p
@@ -10,12 +11,22 @@ h1, h4, p
   padding-top: 5px;
   color: #fafafa;
   /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
-  font-family: 'Roboto';
+  font-family: 'Arial';
 }
 
 canvas 
 {
   display: block;
+}
+
+#chartElevation
+{
+  background-color: #fafafa;
+}
+
+#gpxAnalysis
+{
+    padding-bottom: 20px;
 }
 
 #gpx
@@ -25,8 +36,8 @@ canvas
 
 #gpxTrack 
 {
-  padding-left: 5px;
-  padding-bottom: 5px;
+  padding-left: 20px;
+  padding-bottom: 20px;
 }
 
 #gpxParagraph

@@ -14,7 +14,7 @@ class GPXHeadValidator extends GPXValidator
     {
         super();
         this.validData = ["metadata", "wpt", "rte", "trk", "extensions", "version", "creator"]; 
-        this.validData.push("xmlns", "xmlns:xsi", "xsi:schemaLocation")
+        this.validData.push("xmlns", "xmlns:xsi", "xsi:schemaLocation", "xmlns:gpxx", "xmlns:rcxx", "xmlns:nmea")
     }
 }
 

@@ -3,77 +3,80 @@ class GPXHikeAnalysis
     /* w = hiker weigh [kg], aw = additional weight (ex. Backpack) [kg], tour = GPXTrack || GPXRoute */
     constructor(w, aw, tour)
     {
-        if (!(tour instanceof GPXRoute || tour instanceof GPXTrack))         { GPXConverter.e(`'tour' must be instance of 'GPXTrack' or 'GPXRoute', but it's '${tour.constructor.name}'!`); return; }
-        if (!(tour.content.every(o => o.attributes.hasOwnProperty('ele'))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); return; }
-        if (!(tour.content.every(o => o.attributes.hasOwnProperty('time')))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); return; }
+        let tourPoints = [];
+
+        if (tour instanceof GPXRoute)         
+        { 
+            if (!(tour.content.every(o => o.attributes.hasOwnProperty('ele'))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); console.log(tour.content.filter(o => !o.hasOwnProperty('ele'))); return; }
+            if (!(tour.content.every(o => o.attributes.hasOwnProperty('time')))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); return; }
+            tourPoints = tour.content;
+        }
+        else if (tour instanceof GPXTrack)
+        {
+            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('ele')))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); console.log(tour.content.filter(o => !o.hasOwnProperty('ele'))); return; }
+            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('time'))))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); return; }
+            tour.content.forEach(t => tourPoints = [...tourPoints, ...t.content]);
+        }
+        else
+        {
+            GPXConverter.e(`'tour' must be instance of 'GPXTrack' or 'GPXRoute', but it's '${tour.constructor.name}'!`); return; 
+        }
 
         this.hikerWeight = w;
         this.additionalWeight = aw;
-        this.tour = tour;
-
-        /* Chart js data */
-        this.chartLabels = [];
+        this.tourPoints = tourPoints;
     }
 
     analyze = () =>
     {
         let kcal = 0;
 
-        let elevationDataset  = GPXChartBuilder.createDataset('Elevation [m]',      'rgba(0, 0, 0, 0)', 'rgba(200, 100, 100, 1)');
-        let energyDataset     = GPXChartBuilder.createDataset('Energy [kcal]',      'rgba(0, 0, 0, 0)', 'rgba(100, 200, 100, 1)');
-        let energyMeanDataset = GPXChartBuilder.createDataset('Mean Energy [kcal]', 'rgba(0, 0, 0, 0)', 'rgba( 50, 100,  50, 1)');
-        let speedDataset      = GPXChartBuilder.createDataset('Pace [m/s]',         'rgba(0, 0, 0, 0)', 'rgba(100, 100, 200, 1)');
-        let speedMeanDataset  = GPXChartBuilder.createDataset('Mean Pace [m/s]',    'rgba(0, 0, 0, 0)', 'rgba( 50,  50, 100, 1)');
-        let slopeDataset      = GPXChartBuilder.createDataset('Slope [°]',          'rgba(0, 0, 0, 0)', 'rgba(200, 200, 100, 1)');
-        let slopeMeanDataset  = GPXChartBuilder.createDataset('Mean Slope [°]',     'rgba(0, 0, 0, 0)', 'rgba(100, 100,  50, 1)');
+        let elevationData  = [];
+        let energyData     = [];
+        let speedData      = [];
+        let slopeData      = [];
 
-        this.chartLabels = [];
+        let chartLabels = [];
 
         /* Evalutate transitions between points  */
-        for (let i = 0; i < this.tour.content.length - 1; i++)
+        for (let i = 0; i < this.tourPoints.length - 1; i++)
         {
-            let d = this.tour.content[i].haverSine(this.tour.content[i + 1]); /* [m] */
+            let d = this.tourPoints[i].haverSine(this.tourPoints[i + 1]); /* [m] */
             if (d != 0)
             {
-                let Δh = this.tour.content[i + 1].attributes.ele - this.tour.content[i].attributes.ele; /* [m] */
-                let Δt = (this.tour.content[i + 1].attributes.time.getTime() - this.tour.content[i].attributes.time.getTime()) / 1000; /* [s] */
+                let Δh = this.tourPoints[i + 1].attributes.ele - this.tourPoints[i].attributes.ele; /* [m] */
+                let Δt = (this.tourPoints[i + 1].attributes.time.getTime() - this.tourPoints[i].attributes.time.getTime()) / 1000; /* [s] */
                 let v = d / Δt; /* [m/s] */
                 let ii = GPXHikeAnalysis.gradient(d, Δh); /* [%] */
                 let ee = GPXHikeAnalysis.expendedEnergyHiking(v, ii); /* Energy expenditure is a per-hour value */
-                ee /= 60 * 60; /* Divide by 3600 [s/hr] */
-                ee *= Δt;
+                    ee /= 60 * 60; /* Divide by 3600 [s/hr] */
+                    ee *= Δt;
 
                 /* Get kaloric expense for the current transition */
                 let e = GPXHikeAnalysis.wattPerKilogramToKcal(ee) * (this.hikerWeight + this.additionalWeight);
 
                 kcal += e;
 
-                /* Make chart time labels */
-                let timeObj = this.tour.content[i + 1].attributes.time;
-                let hours = timeObj.getHours()   < 10 ? `0${timeObj.getHours()}`   : `${timeObj.getHours()}`;
-                let mins  = timeObj.getMinutes() < 10 ? `0${timeObj.getMinutes()}` : `${timeObj.getMinutes()}`;
-                let secs  = timeObj.getSeconds() < 10 ? `0${timeObj.getSeconds()}` : `${timeObj.getSeconds()}`;
-
-                this.chartLabels.push(`${hours}:${mins}:${secs}`);
+                chartLabels.push(this.tourPoints[i + 1].attributes.time);
 
                 /* Collect chart data */
-                elevationDataset.data.push(this.tour.content[i + 1].attributes.ele);
-                energyDataset.data.push(e);
-                speedDataset.data.push(v);
-                slopeDataset.data.push(((Math.atan(Δh / d) * (180 / Math.PI)).toFixed(2)));
+                elevationData.push(this.tourPoints[i + 1].attributes.ele);
+                energyData.push(e / Δt);
+                speedData.push(v);
+                slopeData.push(Math.atan(Δh / d) * (180 / Math.PI));
             }
         }
 
-        /* Create mean datasets */
-        energyMeanDataset.data = GPXChartBuilder.getMeanFromDataset(energyDataset.data, 8);
-        speedMeanDataset.data  = GPXChartBuilder.getMeanFromDataset(speedDataset.data, 8);
-        slopeMeanDataset.data  = GPXChartBuilder.getMeanFromDataset(slopeDataset.data, 8);
-        
-        /* Create charts */
-        GPXChartBuilder.createChart(energyChartCanvas, [energyDataset, energyMeanDataset], this.chartLabels);
-        GPXChartBuilder.createChart(elevationChartCanvas, elevationDataset, this.chartLabels);
-        GPXChartBuilder.createChart(paceChartCanvas, [speedDataset, speedMeanDataset], this.chartLabels);
-        GPXChartBuilder.createChart(slopeChartCanvas, [slopeDataset, slopeMeanDataset], this.chartLabels);
+        /* Create Chart Objects */
+        let elevationChart = new GPXChart(elevationChartCanvas);
+
+        /* Add Datasets */
+        elevationChart.addDataset(elevationData, 40, chartLabels, 'Elevation',          '[m]',      'rgba(255, 171, 211, 0.7)', 'rgba(255, 171, 211, 1)', 3);
+        elevationChart.addDataset(energyData,    40, chartLabels, 'Energy expenditure', '[kcal/s]', 'rgba(255, 201, 157, 0.7)', 'rgba(255, 201, 157, 1)', 3);
+        elevationChart.addDataset(speedData,     40, chartLabels, 'Pace',               '[m/s]',    'rgba(197, 245, 183, 0.7)', 'rgba(197, 245, 183, 1)', 3);
+        elevationChart.addDataset(slopeData,     40, chartLabels, 'Slope',              '[°]',      'rgba(188, 255, 233, 0.7)', 'rgba(188, 255, 233, 1)', 3);
+
+        elevationChart.build();
 
         return kcal;
     }
@@ -97,90 +100,181 @@ class GPXHikeAnalysis
     }
 }
 
-
-class GPXChartBuilder
+class GPXChart
 {
-    static createChart(canv, ds, lbls)
+    constructor(canvas)
     {
-        if (!Array.isArray(ds)) ds = [ds];
+        this.canvas = canvas;
 
-        let chartOptions = {}
+        this.chartObject = {};
+        this.chartObject.type = 'scatter';
+        this.chartObject.data = { datasets: [] };
+        this.chartObject.options = {};
+        this.chartObject.options.scales =
+        {
+            yAxes: [],
+            xAxes: []
+        };
 
-        chartOptions.type = 'line';
-        chartOptions.data = { labels: lbls, datasets: ds}
-
-        let yAxesOpt = [{ ticks: { beginAtZero: true } }];
-        let xAxesOpt = [{
-            afterTockToLabelConversion: function (data)
+        this.chartObject.options.legend =
+        {
+            onClick: function(e, legendItem)
             {
-                let xLabels = data.ticks;
-                xLabels.forEach((label, i) => { if (i % 2 == 1) xLabels[i] = '' });
+                let meta = this.chart.getDatasetMeta(legendItem.datasetIndex);
+                let yAxis = this.chart.options.scales.yAxes.find(axis => axis.id == meta.yAxisID);
+
+                /* Hide Y Axis when dataset gets hidden */
+                meta.hidden = !meta.hidden;
+                yAxis.ticks.display = !meta.hidden;
+
+                this.chart.update();
             }
-        }];
-
-        let scalesOpt = { yAxes: yAxesOpt, xAxes: xAxesOpt }
-
-        chartOptions.options = { scales: scalesOpt }
-
-        return new Chart(canv, chartOptions);
+        }
     }
 
-    static createDataset(label, backgroundColor, borderColor, borderWidth = 1, pointRadius = 0)
+    addDataset = (rawData, resolution, rawLabels, label, unit, backgroundColor, borderColor, borderWidth = 1, pointRadius = 1) =>
     {
-        let chartDataset = {};
+        if (!Array.isArray(rawData)) { GPXConverter.e(`'data' must be an array, but it's not!`); return; }
 
-        chartDataset.label = label;
-        chartDataset.data = [];
-        chartDataset.backgroundColor = [backgroundColor];
-        chartDataset.borderColor = [borderColor];
-        chartDataset.borderWidth = borderWidth;
-        chartDataset.pointRadius = pointRadius;
+        let stepSize = Math.floor(rawData.length / resolution);
+        let translatedData = []
 
-        return chartDataset;
-    }
+        if (resolution < rawData.length) label = `Avg. ${label}`;
 
-    static getMeanFromDataset = (data, meanResolution = 7) =>
-    {
-        let stepSize = Math.floor(data.length / meanResolution);
-        let r = [];
-
-        for (let i = 0; i < meanResolution; i++)
+        for (let i = 0; i < resolution; i++)
         {
             let avg = 0;
-            for (let y = 0; y < stepSize; y++) avg += data[i * stepSize + y];
+            for (let y = 0; y < stepSize; y++) avg += rawData[i * stepSize + y];
             avg /= stepSize;
 
-            r[i * stepSize] =  avg;
+            translatedData.push({ x: rawLabels[i * stepSize], y: avg });
         }
 
-        r[data.length - 1] = 1e-10;
+        /* Add average of remainder aswell... */
+        if (resolution * stepSize != rawData.length)
+        {
+            stepSize = rawData.length % resolution;
+            let avg = 0;
+            for (let y = 0; y < stepSize; y++) avg += rawData[resolution * stepSize + y];
+            avg /= stepSize;
 
-        /* Polynomial interpolation to get the values in between.
-        Map r array to this format: [[x,y], [x,y], [x,y]...] and then 
-        reindex the array ( .filter(val => val) ). 'r' is unaltered */
-        let f = GPXChartBuilder.polynomialInterpolation((r.map((val, i) => [i, val]).filter(val => val)));  
+            translatedData.push({ x: rawLabels[rawData.length - 1], y: avg });
+        }
 
-        for (let i = 0; i < data.length; i++)if (r[i] == null) r[i] = f(i);
+        let yAxisId = `${label.replace(/\s/g, '')}_yID`;
+        let xAxisId = `${label.replace(/\s/g, '')}_xID`;
 
-        return r;
+        let datasetObject = {};
+
+        datasetObject.label = `${label} ${unit}`;
+        datasetObject.yAxisID = yAxisId;
+        datasetObject.xAxisID = xAxisId;
+        datasetObject.showLine = true;
+        datasetObject.fill = true;
+        datasetObject.data = translatedData;
+        datasetObject.backgroundColor = [backgroundColor];
+        datasetObject.borderColor = [borderColor];
+        datasetObject.borderWidth = borderWidth;
+        datasetObject.pointRadius = pointRadius;
+
+        this.chartObject.options.scales.yAxes.push(
+        {
+            id: yAxisId,
+            ticks:
+            {
+                display: true,
+                beginAtZero: true,
+                callback: function (value, index, values) { return `${value} ${unit}`; },
+                fontColor: borderColor
+            },
+            type: 'linear',
+            position: 'left'
+        });        
+
+        this.chartObject.options.scales.xAxes.push(
+        {
+            id: xAxisId,
+            ticks:
+            {
+                display: this.chartObject.options.scales.xAxes.length == 0
+            },
+            type: 'time',
+            position: 'bottom',
+            time:
+            {
+                unit: 'minute'
+            }
+        });
+
+        this.chartObject.data.datasets.push(datasetObject);
     }
 
-    static polynomialInterpolation = (points) =>
+
+    build = () =>
     {
-        let n = points.length - 1, p;
+        this.chart = new Chart(this.canvas, this.chartObject);
+    }
 
-        p = function (i, j, x) 
-        {
-            if (i === j) return points[i][1];
-            return ((points[j][0] - x) * p(i, j - 1, x) +
-                    (x - points[i][0]) * p(i + 1, j, x)) /
-                    (points[j][0] - points[i][0]);
-        }
 
-        return function (x) 
-        {
-            if (points.length === 0) return 0;
-            return p(0, n, x);
-        }
-    };
+
+    // static getMeanFromData = (data, meanResolution = 7, type = 'lerp') =>
+    // {
+    //     let stepSize = Math.floor(data.length / meanResolution);
+    //     let r = [];
+
+    //     for (let i = 0; i < meanResolution; i++)
+    //     {
+    //         let avg = 0;
+    //         for (let y = 0; y < stepSize; y++) avg += data[i * stepSize + y];
+    //         avg /= stepSize;
+
+    //         r[i * stepSize] =  avg;
+    //     }
+
+    //     // r[data.length - 1] = 1e-10;
+    //     r[data.length - 1] = data[data.length - 1];
+
+    //     /* Polynomial / Linear interpolation to get the values in between.
+    //     Map 'r' array to this format: [[x,y], [x,y], [x,y]...] and then
+    //     reindex 'r' -> ( .filter(val => val) ). 'r' is unaltered */
+    //     let f;
+    //     if (type == 'lerp')            f = GPXChart.linearInterpolation((r.map((val, i) => [i, val]).filter(val => val)));
+    //     else if (type == 'polynomial') f = GPXChart.polynomialInterpolation((r.map((val, i) => [i, val]).filter(val => val)));
+    //     else if (type == 'nothing')    return r;
+    //     else GPXConverter.e(`Unknown mean data generation type '${type}'! Use 'lerp' or 'polynomial'.`);
+
+    //     for (let i = 0; i < data.length; i++)if (r[i] == null) r[i] = f(i);
+
+    //     return r;
+    // }
+
+
+    // static polynomialInterpolation = (points) =>
+    // {
+    //     let n = points.length - 1, p;
+
+    //     p = function (i, j, x)
+    //     {
+    //         if (i === j) return points[i][1];
+    //         return ((points[j][0] - x) * p(i, j - 1, x) + (x - points[i][0]) * p(i + 1, j, x))  /  (points[j][0] - points[i][0]);
+    //     }
+
+    //     return function (x)
+    //     {
+    //         if (points.length === 0) return 0;
+    //         return p(0, n, x);
+    //     }
+    // };
+
+
+    // static linearInterpolation = (points) =>
+    // {
+    //     return function (x)
+    //     {
+    //         if (points.length === 0) return 0;
+    //         let i = points.indexOf(points.find(p => p[0] > x));
+    //         if (i === 0) return points[0][1];
+    //         return (points[i][1]-points[i-1][1])/(points[i][0]-points[i-1][0]) * ( x - points[i-1][0]) + points[i-1][1];
+    //     }
+    // }
 }

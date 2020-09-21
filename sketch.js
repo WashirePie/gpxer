@@ -29,7 +29,7 @@ const sketch = p =>
 
   const plotTracks = () =>
   {
-    trackBuf.background(51);
+    trackBuf.background(0,0,0,0);
 
     /* Plot track */
     trackBuf.stroke(200);
@@ -39,20 +39,38 @@ const sketch = p =>
     let canvasSize = trackBuf.width > trackBuf.height ? trackBuf.height : trackBuf.width;
 
     trackBuf.beginShape();
-    R.content.forEach(rtept =>
+    if (R instanceof GPXRoute)
     {
-      if (rtept.attributes.hasOwnProperty('ele') && rtept.attributes.hasOwnProperty('time')) 
+      R.content.forEach(rtept =>
       {
-        let x = trackBuf.map(rtept.attributes.lon, bounds.minLon, bounds.maxLon, 0, canvasSize);
-        let y = trackBuf.map(rtept.attributes.lat, bounds.minLat, bounds.maxLat, canvasSize, 0);
-        
-        trackBuf.vertex(x, y);
-      }
-    });
+        if (rtept.attributes.hasOwnProperty('ele') && rtept.attributes.hasOwnProperty('time')) 
+        {
+          let x = trackBuf.map(rtept.attributes.lon, bounds.minLon, bounds.maxLon, 0, canvasSize);
+          let y = trackBuf.map(rtept.attributes.lat, bounds.minLat, bounds.maxLat, canvasSize, 0);
+          
+          trackBuf.vertex(x, y);
+        }
+      });
+    }
+    else
+    {
+      R.content.forEach(trkseg =>
+      {
+        trkseg.content.forEach(trkpt =>
+        {          
+          if (trkpt.attributes.hasOwnProperty('ele') && trkpt.attributes.hasOwnProperty('time')) 
+          {
+            let x = trackBuf.map(trkpt.attributes.lon, bounds.minLon, bounds.maxLon, 0, canvasSize);
+            let y = trackBuf.map(trkpt.attributes.lat, bounds.minLat, bounds.maxLat, canvasSize, 0);
+
+            trackBuf.vertex(x, y);
+          }
+        })
+      });
+    }
     trackBuf.endShape();
   }
 }
-
 
 
 let gpxHeadDiv = document.getElementById('gpxAnalysis');
@@ -85,19 +103,36 @@ slopeChartCanvas.width  = window.innerWidth;
 slopeChartCanvas.height = window.innerHeight * 1/3;  
 
 
-/* Create GPX */
-G = GPXConverter.parse(testGpxString2);
+/*
+[] Fix Style of charts
+  [] Gridline color
+  [] lable visibility (add backgroundcolor)
+[] Add rawdata as standard dataset to charts with default visibility = false
+[] Make x axis ticks in seconds, only where the datapoints are
+[] Refactor the scaling method in GPXChart - it's horrific
+[] Make resolution a dat.gui slider
 
-R = G.routes;
+[] Refactor GPXParams -> Still necessary?
+[] Fix GPXAnalysis with tracks
+   Currently all trksegs are just concatenated 
+[] Add cmt, name, desc in trkpt or rtept to chart tags 
+[] Refactor main entry point
+*/
+
+/* Create GPX */
+G = GPXConverter.parse(testGpxString);
+R = G.routes ? G.routes : G.tracks;
+
 bounds = Object.assign(R.getExtrema('ele'), R.getExtrema('time'), R.getExtrema('lat'), R.getExtrema('lon'));
 
 RA = new GPXHikeAnalysis(80, 10, R);
+
 calories = RA.analyze();
+
 titleHeading.innerHTML = `GPXTrack: ${Object.values(R.attributes).join(' ')}`;
 titleParagraph.innerHTML = `Used energy: ${calories}kcal`;
 
 new p5(sketch, 'gpxTrack');
-
 gui = new dat.GUI();
 
 let hwController = gui.add(RA, 'hikerWeight', 30, 150, 0.5);
