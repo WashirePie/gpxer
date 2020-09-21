@@ -10,9 +10,22 @@
 
   </head>
   <body>
-    <div id="gpx"></div>
-    <canvas id="chart"></canvas>
-    <div id="controls" class="controls">
+    <div id="controls" class="controls"></div>
+
+    <div id="gpx">
+      <div id="gpxAnalysis">
+        <h1>GPX</h1>
+        <h4 id="gpxTitle">Title</h4>
+        <p id="gpxParagraph">Test paragraph</p>
+      </div>
+      <div id="gpxTrack"></div>
+    </div>
+
+    <div id="charts">
+      <canvas id="chartElevation" style="display: block;"></canvas>
+      <canvas id="chartEnergy" style="display: block;"></canvas>
+      <canvas id="chartPace" style="display: block;"></canvas>
+      <canvas id="chartSlope" style="display: block;"></canvas>
     </div>
     
     <script src="sampleData.js"></script>

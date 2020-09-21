@@ -3,6 +3,7 @@ let R;
 let RA;
 let bounds;
 let gui;
+let calories;
 
 const sketch = p =>
 {
@@ -11,10 +12,7 @@ const sketch = p =>
   p.setup = () =>
   {
     p.createCanvas(window.innerWidth, window.innerHeight * 1/2);
-
     trackBuf = p.createGraphics(window.innerWidth, window.innerHeight * 1/2);
-
-    p.background(53);
   }
 
   p.draw = () =>
@@ -57,40 +55,54 @@ const sketch = p =>
 
 
 
+let gpxHeadDiv = document.getElementById('gpxAnalysis');
+let gpxTrackDiv = document.getElementById('gpxTrack');
+
+let elevationChartCanvas = document.getElementById('chartElevation').getContext('2d');
+let energyChartCanvas = document.getElementById('chartEnergy').getContext('2d');
+let paceChartCanvas = document.getElementById('chartPace').getContext('2d');
+let slopeChartCanvas = document.getElementById('chartSlope').getContext('2d');
+
+let titleHeading = document.getElementById('gpxTitle');
+let titleParagraph = document.getElementById('gpxParagraph');
+
+gpxHeadDiv.width = window.innerWidth;
+gpxHeadDiv.height = window.innerHeight * 1/4;
+
+gpxTrackDiv.width = window.innerWidth;
+gpxTrackDiv.height = window.innerHeight * 1/2;
+
+elevationChartCanvas.width  = window.innerWidth;
+elevationChartCanvas.height = window.innerHeight * 1/3;
+
+energyChartCanvas.width  = window.innerWidth;
+energyChartCanvas.height = window.innerHeight * 1/3;  
+
+paceChartCanvas.width  = window.innerWidth;
+paceChartCanvas.height = window.innerHeight * 1/3;  
+
+slopeChartCanvas.width  = window.innerWidth;
+slopeChartCanvas.height = window.innerHeight * 1/3;  
 
 
-let doAnalyze = () =>
-{
-  let calories = RA.analyze();
-  console.log(calories);
-  RA.makeChart(chartCanv);
-}
-
-let gpxDiv = document.getElementById('gpx');
-let chartCanv = document.getElementById('chart').getContext('2d');
-
-gpxDiv.width = window.innerWidth;
-gpxDiv.height = window.innerHeight * 1/2;
-chartCanv.width = window.innerWidth;
-chartCanv.height = window.innerHeight * 1/2;  
-
+/* Create GPX */
 G = GPXConverter.parse(testGpxString2);
-R = G.routes;
-console.log(R);
 
+R = G.routes;
 bounds = Object.assign(R.getExtrema('ele'), R.getExtrema('time'), R.getExtrema('lat'), R.getExtrema('lon'));
 
 RA = new GPXHikeAnalysis(80, 10, R);
-doAnalyze();
+calories = RA.analyze();
+titleHeading.innerHTML = `GPXTrack: ${Object.values(R.attributes).join(' ')}`;
+titleParagraph.innerHTML = `Used energy: ${calories}kcal`;
 
-new p5(sketch, 'gpx');
+new p5(sketch, 'gpxTrack');
 
 gui = new dat.GUI();
 
 let hwController = gui.add(RA, 'hikerWeight', 30, 150, 0.5);
 let awController = gui.add(RA, 'additionalWeight', 0, 100, 0.5);
 
-hwController.onFinishChange(() => { doAnalyze(); });
-awController.onFinishChange(() => { doAnalyze(); });
-
+hwController.onFinishChange(() => { calories = RA.analyze(); });
+awController.onFinishChange(() => { calories = RA.analyze(); });
 
