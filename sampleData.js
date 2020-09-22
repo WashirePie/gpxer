@@ -5258,10 +5258,11 @@ const testGpxString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <name>Position 41</name>
             </trkpt>
             <trkpt lon="8.002875" lat="46.552663">
-                <ele>3626.975</ele>
                 <time>2010-09-15T05:14:05.000Z</time>
                 <name>Position 42</name>
             </trkpt>
+          </trkseg>
+          <trkseg>
             <trkpt lon="8.002839" lat="46.552677">
                 <ele>3628.403</ele>
                 <time>2010-09-15T05:14:10.000Z</time>
@@ -6242,6 +6243,8 @@ const testGpxString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <time>2010-09-15T05:23:45.000Z</time>
                 <name>Position 238</name>
             </trkpt>
+          </trkseg>
+          <trkseg>
             <trkpt lon="8.002313" lat="46.553149">
                 <ele>3677.054</ele>
                 <time>2010-09-15T05:23:51.000Z</time>
@@ -7377,6 +7380,8 @@ const testGpxString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <time>2010-09-15T05:43:25.000Z</time>
                 <name>Position 465</name>
             </trkpt>
+          </trkseg>
+          <trkseg>
             <trkpt lon="8.0023" lat="46.554502">
                 <ele>3785.632</ele>
                 <time>2010-09-15T05:43:30.000Z</time>

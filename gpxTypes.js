@@ -318,6 +318,8 @@ class GPXParentType extends GPXType
     {
         super(validator);
         this.content = [];
+        this.analyzer = null;
+        this.visualizer = null;
     }
 
     

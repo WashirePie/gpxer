@@ -1,29 +1,38 @@
 class GPXHikeAnalysis
 {
-    /* w = hiker weigh [kg], aw = additional weight (ex. Backpack) [kg], tour = GPXTrack || GPXRoute */
-    constructor(w, aw, tour)
+    /* w = hiker weigh [kg], aw = additional weight (ex. Backpack) [kg], tour = GPXTrack || GPXRoute 
+     div = HTML container for the canvas element */
+    constructor(tour, div, w, aw, colorPalette)
     {
         let tourPoints = [];
 
         if (tour instanceof GPXRoute)         
         { 
             if (!(tour.content.every(o => o.attributes.hasOwnProperty('ele'))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); console.log(tour.content.filter(o => !o.hasOwnProperty('ele'))); return; }
-            if (!(tour.content.every(o => o.attributes.hasOwnProperty('time')))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); return; }
+            if (!(tour.content.every(o => o.attributes.hasOwnProperty('time')))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); console.log(tour.content.filter(o => !o.hasOwnProperty('time'))); return; }
             tourPoints = tour.content;
         }
         else if (tour instanceof GPXTrack)
         {
-            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('ele')))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); console.log(tour.content.filter(o => !o.hasOwnProperty('ele'))); return; }
-            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('time'))))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); return; }
+            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('ele')))))  { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'ele' property!`); console.log(tour.content.filter(t => !t.content.every(o => o.hasOwnProperty('ele')))); return; }
+            if (!(tour.content.every(t => t.content.every(o => o.attributes.hasOwnProperty('time'))))) { GPXConverter.e(`insufficient data! Not every element in 'tour.content' has a 'time' property!`); console.log(tour.content.filter(t => !t.content.every(o => o.hasOwnProperty('time')))); return; }
             tour.content.forEach(t => tourPoints = [...tourPoints, ...t.content]);
         }
         else
         {
+            if (!tour) { GPXConverter.e(`'tour' must be instance of 'GPXTrack' or 'GPXRoute', but it's undefined!`); return;}
             GPXConverter.e(`'tour' must be instance of 'GPXTrack' or 'GPXRoute', but it's '${tour.constructor.name}'!`); return; 
         }
 
+        this.canvasElement = document.createElement('canvas');
+        this.canvasElement.width = window.innerWidth;
+        this.canvasElement.height = window.innerHeight * 1/2;
+
+        div.appendChild(this.canvasElement);
+
         this.hikerWeight = w;
         this.additionalWeight = aw;
+        this.colorPalette = colorPalette;
         this.tourPoints = tourPoints;
     }
 
@@ -68,15 +77,15 @@ class GPXHikeAnalysis
         }
 
         /* Create Chart Objects */
-        let elevationChart = new GPXChart(elevationChartCanvas);
+        let analysisChart = new GPXChart(this.canvasElement);
 
         /* Add Datasets */
-        elevationChart.addDataset(elevationData, 40, chartLabels, 'Elevation',          '[m]',      'rgba(255, 171, 211, 0.7)', 'rgba(255, 171, 211, 1)', 3);
-        elevationChart.addDataset(energyData,    40, chartLabels, 'Energy expenditure', '[kcal/s]', 'rgba(255, 201, 157, 0.7)', 'rgba(255, 201, 157, 1)', 3);
-        elevationChart.addDataset(speedData,     40, chartLabels, 'Pace',               '[m/s]',    'rgba(197, 245, 183, 0.7)', 'rgba(197, 245, 183, 1)', 3);
-        elevationChart.addDataset(slopeData,     40, chartLabels, 'Slope',              '[°]',      'rgba(188, 255, 233, 0.7)', 'rgba(188, 255, 233, 1)', 3);
+        analysisChart.addDataset(elevationData, 40, chartLabels, 'Elevation',          '[m]',      'rgba(255, 171, 211, 0.7)', 'rgba(255, 171, 211, 1)', 2);
+        analysisChart.addDataset(energyData,    40, chartLabels, 'Energy expenditure', '[kcal/s]', 'rgba(255, 201, 157, 0.7)', 'rgba(255, 201, 157, 1)', 2);
+        analysisChart.addDataset(speedData,     40, chartLabels, 'Pace',               '[m/s]',    'rgba(197, 245, 183, 0.7)', 'rgba(197, 245, 183, 1)', 2);
+        analysisChart.addDataset(slopeData,     40, chartLabels, 'Slope',              '[°]',      'rgba(188, 255, 233, 0.7)', 'rgba(188, 255, 233, 1)', 2);
 
-        elevationChart.build();
+        analysisChart.build();
 
         return kcal;
     }
