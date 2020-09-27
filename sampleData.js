@@ -5257,10 +5257,6 @@ const testGpxString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <time>2010-09-15T05:14:04.000Z</time>
                 <name>Position 41</name>
             </trkpt>
-            <trkpt lon="8.002875" lat="46.552663">
-                <time>2010-09-15T05:14:05.000Z</time>
-                <name>Position 42</name>
-            </trkpt>
           </trkseg>
           <trkseg>
             <trkpt lon="8.002839" lat="46.552677">

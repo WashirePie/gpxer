@@ -1,39 +1,71 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
-    <script type="text/javascript" src="dat.gui.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+    <script defer type="text/javascript" src="dat.gui.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style/main.css">
+    <link rel="stylesheet" type="text/css" href="style/modal.css">
     <meta charset="utf-8" />
 
   </head>
   <body>
+    <div class="grid-layout" id="widgetContainer" >
+      <!-- <div class="grid-item span-2 grid-item-1">
+        <h1 class="title-name">gpxer</h1>
+        <p class="version">v0.0.0 (beta)</p>
+      </div> -->
+
+      <!-- <div class="grid-item square-3 grid-item-2">
+        tour plot
+      </div> -->
+
+      <!-- <div class="grid-item span-3 grid-item-3">item 3</div>
+      <div class="grid-item grid-item-4">item 4</div>
+      <div class="grid-item span-2 grid-item-5">item 5</div>
+      <div class="grid-item grid-item-6">item 6</div>
+      <div class="grid-item grid-item-7">item 7</div>
+      <div class="grid-item grid-item-8">item 8</div>
+      <div class="grid-item grid-item-9">item 9</div>
+      <div class="grid-item span-2 grid-item-10">item 10</div>
+      <div class="grid-item grid-item-11">item 11</div>
+      <div class="grid-item grid-item-12">item 12</div>
+      <div class="grid-item span-2 grid-item-13">item 13</div>
+      <div class="grid-item grid-item-14">item 14</div>
+      <div class="grid-item grid-item-15">item 15</div>
+      <div class="grid-item grid-item-16">item 16</div> -->
+    </div>
+
+    <div id="modalOverlay">
+      <div id="modal">
+        <p id="modalMessage">Look at this fancy pop-up</p>
+        <div id="modalOptions">
+          <select id="modalSelect" name="tours">
+          </select>
+          <button id="modalBtn">Accept</button>
+        </div>
+      </div>
+    </div>
+
     <div id="controls" class="controls"></div>
 
-    <div id="gpx">
-      <div id="gpxAnalysis">
-        <h1>GPX</h1>
-        <h4 id="gpxTitle">Title</h4>
-        <p id="gpxParagraph">Test paragraph</p>
-      </div>
-      <div id="gpxTrack">
-        <!-- Auto Generated Content: p5.js Canvas -->
-      </div>
-    </div>
-
     <div id="charts">
-      <!-- Auto Generated Content: Charts -->
+      <!-- Auto Generated Content: Chart JS Canvas -->
     </div>
     
-    <script src="sampleData.js"></script>
-    <script src="gpxTypes.js"></script>
-    <script src="gpxValidators.js"></script>
-    <script src="gpxAnalysis.js"></script>
-    <script src="gpxVisualizer.js"></script>
-    <script src="gpx.js"></script>
-    <script src="sketch.js"></script>
+    <script defer src="sampleData.js"></script>
+
+    <script defer src="uiControl.js"></script>
+    <script defer src="uiBinding.js"></script>
+
+    <script defer src="gpxTypes.js"></script>
+    <script defer src="gpxValidators.js"></script>
+    <script defer src="gpxView.js"></script>
+    <script defer src="gpx.js"></script>
+
+    <script defer src="sketch.js"></script>
   </body>
 </html>

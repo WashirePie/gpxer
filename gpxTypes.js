@@ -70,187 +70,26 @@ class GPXParam
 }
 
 
-class GPXElevationParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'ele')
-    }
-}
-
-
-class GPXTimeParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'time')
-    }
-}
-
-
-class GPXGeoIDHeightParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'geoidheight')
-    }
-}
-
-
-class GPXNameParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'name')
-    }
-}
-
-
-class GPXNumberParam extends GPXParam
-{
-    constructor(obj)
-    {
-        super(obj, 'number');
-    }
-}
-
-
-class GPXMagvarParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'magvar')
-    }
-}
-
-
-class GPXCommentParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'cmt')
-    }
-}
-
-
-class GPXDescriptionParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'desc')
-    }
-}
-
-
-class GPXSourceParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'src')
-    }
-}
-
-
-class GPXLinkParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'link')
-    }
-}
-
-
-class GPXSymbolParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'sym')
-    }
-}
-
-
-class GPXTypeParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'type')
-    }
-}
-
-
-class GPXFixParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'fix')
-    }
-}
-
-
-class GPXSatParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'sat')
-    }
-}
-
-
-class GPXhDOPParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'hdop')
-    }
-}
-
-
-class GPXvDOPParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'vdop')
-    }
-}
-
-
-class GPXpDOPParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'pdop')
-    }
-}
-
-
-class GPXAgeOfGPSDataParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'ageofdgpsdata')
-    }
-}
-
-
-class GPXdGPSiDParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'dgpsid')
-    }
-}
-
-
-class GPXExtensionsParam extends GPXParam 
-{
-    constructor(obj)
-    {
-        super(obj, 'extensions')
-    }
-}
-
-
-
+class GPXElevationParam    extends GPXParam { constructor(obj) { super(obj, 'ele')          } }
+class GPXTimeParam         extends GPXParam { constructor(obj) { super(obj, 'time')         } }
+class GPXGeoIDHeightParam  extends GPXParam { constructor(obj) { super(obj, 'geoidheight')  } }
+class GPXNameParam         extends GPXParam { constructor(obj) { super(obj, 'name')         } }
+class GPXNumberParam       extends GPXParam { constructor(obj) { super(obj, 'number');      } }
+class GPXMagvarParam       extends GPXParam { constructor(obj) { super(obj, 'magvar')       } }
+class GPXCommentParam      extends GPXParam { constructor(obj) { super(obj, 'cmt')          } }
+class GPXDescriptionParam  extends GPXParam { constructor(obj) { super(obj, 'desc')         } }
+class GPXSourceParam       extends GPXParam { constructor(obj) { super(obj, 'src')          } }
+class GPXLinkParam         extends GPXParam { constructor(obj) { super(obj, 'link')         } }
+class GPXSymbolParam       extends GPXParam { constructor(obj) { super(obj, 'sym')          } }
+class GPXTypeParam         extends GPXParam { constructor(obj) { super(obj, 'type')         } }
+class GPXFixParam          extends GPXParam { constructor(obj) { super(obj, 'fix')          } }
+class GPXSatParam          extends GPXParam { constructor(obj) { super(obj, 'sat')          } }
+class GPXhDOPParam         extends GPXParam { constructor(obj) { super(obj, 'hdop')         } }
+class GPXvDOPParam         extends GPXParam { constructor(obj) { super(obj, 'vdop')         } }
+class GPXpDOPParam         extends GPXParam { constructor(obj) { super(obj, 'pdop')         } }
+class GPXAgeOfGPSDataParam extends GPXParam { constructor(obj) { super(obj, 'ageofdgpsdata')} }
+class GPXdGPSiDParam       extends GPXParam { constructor(obj) { super(obj, 'dgpsid')       } }
+class GPXExtensionsParam   extends GPXParam { constructor(obj) { super(obj, 'extensions')   } }
 
 
 
@@ -309,6 +148,54 @@ class GPXType
 
         delete this.values;
     }
+
+    /* types: Array of allowed types ex.: ['GPXRoute']
+    attributes: ['ele', 'time', 'lat', 'lon'] */
+    static typeCheck = (obj, types, attributes = []) =>
+    {
+        if (!obj) throw `(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's undefined!`;
+
+        /* Type Check */
+        if (!types.some(type => obj instanceof eval(type))) GPXConverter.t(`(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's '${obj.constructor.name}'!`);
+
+        /* Check for inconsistent / incomplete GPXSurfaceTypes */
+        if (!obj.hasOwnProperty('content')) 
+        {
+            GPXConverter.t(`(Type Check): Cannot execute attribute-check, 'obj' has no property 'content'!`);
+        }
+        else if ( obj.content.every(o => o.hasOwnProperty('content')) )
+        {
+            attributes.forEach(attribute =>
+            {
+                obj.content.forEach(cobj =>
+                {                    
+                    let inconsitent = cobj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
+                    if (inconsitent.length)
+                    {
+                        GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${cobj.content.length} Points do not contain the attribute '${attribute}'`);
+                        console.warn(inconsitent);
+                        console.warn('Parent Object:');
+                        console.warn(obj);
+                    }
+                });
+            });
+        }
+        else
+        {            
+            attributes.forEach(attribute =>
+            {
+                let inconsitent = obj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
+
+                if (inconsitent.length)
+                {
+                    GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${obj.content.length} Points do not contain the attribute '${attribute}'`);
+                    console.warn(inconsitent);
+                }
+            });
+        }
+
+        return true;
+    }
 }
 
 
@@ -329,7 +216,7 @@ class GPXParentType extends GPXType
 
         if (this.content.every(o => o instanceof GPXParentType))
         {
-            this.content.forEach(e => d += e.distance);
+            this.content.forEach(e => d += e.getDistance);
         }
         else
         {
@@ -372,26 +259,6 @@ class GPXParentType extends GPXType
 
         return r;
     }
-
-    /* Somehow this version of getExtrema which uses Array.prototype.reduce() won't return the true extremas... */
-
-    // getExtrema = (attr) =>
-    // {
-    //     let r = {};
-    //     let propName = attr[0].toUpperCase() + attr.slice(1);
-
-    //     if (this.content.every(o => o instanceof GPXParentType))
-    //     {
-    //         throw "Not yet implemented";
-    //     }
-    //     else
-    //     {
-    //         r[`max${propName}`] = this.content.reduce((p, c) => p.attributes[attr] > c.attributes[attr] ? p : c).attributes[attr];
-    //         r[`min${propName}`] = this.content.reduce((p, c) => p.attributes[attr] < c.attributes[attr] ? p : c).attributes[attr]; 
-    //     }
-
-    //     return r;
-    // }
 }
 
 
@@ -435,6 +302,23 @@ class GPXSurfaceType extends GPXType
         const d = R * c; /* distance in meters */
 
         return d;
+    }
+
+    heightDifference = (surfaceType) =>
+    {
+        if (!surfaceType instanceof GPXSurfaceType) { GPXConverter.e(`heightDifference argument must be of type 'GPXSurfaceType'!`); return; }
+
+        let Δh = this.attributes.ele - surfaceType.attributes.ele; /* [m] */
+        return Δh; 
+    }
+
+    timeDifference = (surfaceType) =>
+    {
+        if (!surfaceType instanceof GPXSurfaceType) { GPXConverter.e(`timeDifference argument must be of type 'GPXSurfaceType'!`); return; }
+        
+        let Δt = (this.attributes.time.getTime() - surfaceType.attributes.time.getTime()) / 1000; /* [s] */
+        return Δt 
+
     }
 }
 

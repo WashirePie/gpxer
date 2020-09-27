@@ -5,11 +5,37 @@ class GPX
     {
         if (!gpxHead instanceof GPXHead) throw GPXConverter.e(`received an obj of type '${conv.constructor.name}' instead of 'GPXHead'!`);
 
-        this.waypoints = gpxHead.content.find(o => o instanceof GPXWaypoint); 
-        this.metadata = gpxHead.content.find(o => o instanceof GPXMetadata);
-        this.tracks = gpxHead.content.find(o => o instanceof GPXTrack);
-        this.routes = gpxHead.content.find(o => o instanceof GPXRoute);
         this.rawXml = xml;
+
+        let waypoints = gpxHead.content.find(o => o instanceof GPXWaypoint); 
+        let metadata = gpxHead.content.find(o => o instanceof GPXMetadata);
+        let tracks = gpxHead.content.find(o => o instanceof GPXTrack);
+        let routes = gpxHead.content.find(o => o instanceof GPXRoute);
+
+        /* Only add properties if necessary */
+        if (routes != undefined) this.routes = (!Array.isArray(routes)) ? [routes] : routes;
+        if (tracks != undefined) this.tracks = (!Array.isArray(tracks)) ? [tracks] : tracks;
+        if (waypoints != undefined) this.waypoints = (!Array.isArray(waypoints)) ? [waypoints] : waypoints;
+        if (metadata != undefined) this.metadata = metadata;
+    }
+
+    getTourList = () =>
+    {
+        let list = [];
+
+        if (this.hasOwnProperty('routes')) 
+            this.routes.forEach((route, i) => 
+            { 
+                list.push({ tag: `Route ${i}, (${(route.getDistance / 1000).toFixed(2)}km)`, tour: route }) 
+            });
+
+        if (this.hasOwnProperty('tracks')) 
+            this.tracks.forEach((track, i) => 
+            { 
+                list.push({ tag: `Track ${i}, (${(track.getDistance / 1000).toFixed(2)}km)`, tour: track }) 
+            });
+
+        return list;
     }
 }
 
@@ -18,6 +44,7 @@ class GPXConverter
 {
     static e = (msg) => { console.error(`GPXConverter Error - ${msg}`); }
     static w = (msg) => { console.warn(`GPXConverter Warning - ${msg}`); }
+    static t = (ex)  => { throw `GPXConverter Exception - ${ex}`; }
 
 
     static parse = (gpxString) =>
