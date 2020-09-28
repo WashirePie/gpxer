@@ -110,6 +110,12 @@ body
     grid-row-end: span 1;
 }
 
+.square-2
+{
+    grid-column-end: span 2;
+    grid-row-end: span 2;
+}
+
 .square-3
 {
     grid-column-end: span 3;
@@ -118,6 +124,6 @@ body
 
 .span-chart
 {
-    grid-column-end: span 9;
+    grid-column: 1 / -1;
     grid-row-end: span 4;
 }

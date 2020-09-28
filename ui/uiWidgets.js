@@ -43,6 +43,27 @@ class UITourPlotWidget extends UIWidget
 
         this.element.appendChild(this.canvas);
     }
+
+    plot = (points, bounds) =>
+    {
+        let bufferSize = this.ctx.canvas.width;
+
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = '#fff';
+        for (let i = 0; i < points.length - 1; i++) 
+        {
+            let x = Math.floor(map(points[i].attributes.lon, bounds.minLon, bounds.maxLon, 0, bufferSize));
+            let y = Math.floor(map(points[i].attributes.lat, bounds.minLat, bounds.maxLat, bufferSize, 0));
+
+            this.ctx.moveTo(x, y);
+
+            let x2 = Math.floor(map(points[i + 1].attributes.lon, bounds.minLon, bounds.maxLon, 0, bufferSize));
+            let y2 = Math.floor(map(points[i + 1].attributes.lat, bounds.minLat, bounds.maxLat, bufferSize, 0));
+
+            this.ctx.lineTo(x2, y2);
+        }
+        this.ctx.stroke();
+    }
 }
 
 class UIChartWidget extends UIWidget
@@ -113,7 +134,7 @@ class UIEnergyConsumptionWidget extends UIWidget
 {
     constructor(parent)
     {
-        super(parent, 'energy consumption', 'span-2');
+        super(parent, 'energy consumption', 'square-2');
 
         this.div = document.createElement('div');
         this.div.className = 'widget-content';
@@ -146,25 +167,34 @@ class UIEnergyConsumptionWidget extends UIWidget
 
 class UISingleWidget extends UIWidget
 {
-    constructor(parent, style, title, icon, unit, binding) 
+    constructor(parent, style, title, icon, unit, binding, description = '') 
     {
         super(parent, title, style);
 
         this.div = document.createElement('div');
         this.div.className = 'widget-content';
 
+        
         this.icon = document.createElement('p');
         this.icon.className = 'material-icons widget-icon';
         this.icon.innerHTML = icon
-
+        
         this.h1 = document.createElement('h1');
         this.h1.className = 'widget-content-inline';
         this.h1.setAttribute('data-bind', binding);
-
+        
         this.h1Unit = document.createElement('h1');
         this.h1Unit.className = 'widget-content-inline widget-unit';
         this.h1Unit.innerHTML = ` <i>${unit}</i>`;
-
+        
+        if (description != '')
+        {
+            this.p = document.createElement('p');
+            this.p.className = 'widget-description';
+            this.p.innerHTML = description;
+    
+            this.div.appendChild(this.p);
+        }
         this.div.appendChild(this.icon);
         this.div.appendChild(this.h1);
         this.div.appendChild(this.h1Unit);
@@ -347,3 +377,22 @@ class UIQuadWidget extends UIWidget
         this.element.appendChild(this.div);
     }
 }
+
+
+/*
+ * Helper functions
+ */
+
+const map = (n, start1, stop1, start2, stop2, withinBounds) =>
+{
+  const newval = (n - start1) / (stop1 - start1) * (stop2 - start2) + start2;
+
+  if (!withinBounds) return newval;
+
+  if (start2 < stop2) return constrain(newval, start2, stop2);
+  else                return constrain(newval, stop2, start2);
+
+}
+
+
+const constrain = (n, low, high) => { return Math.max(Math.min(n, high), low); }

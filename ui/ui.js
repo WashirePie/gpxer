@@ -5,7 +5,6 @@ class UIController
     constructor()
     {
         /* Get relevant UI Elements */
-        this.uiWidgetContainer = document.getElementById('widgetContainer');
         this.uiModalOverlayDiv = document.getElementById('modalOverlay');
         this.uiModalSelect = document.getElementById('modalSelect');
         this.uiModalMessage = document.getElementById('modalMessage');
@@ -15,36 +14,12 @@ class UIController
         /* Properties */
         this.dataBindings = {};
 
-        this.widgets = [
-            new UIAppInfoWidget(this.uiWidgetContainer, ''),
-            new UITourPlotWidget(this.uiWidgetContainer, 'tour plot', 500, 500),
-            new UIChartWidget(this.uiWidgetContainer, '')
-        ]
-
         /* Hide App */
-        this.uiWidgetContainer.style.display = 'none';
+        UIWC.style.display = 'none';
 
         /* Show modal */
         this.uiModalMessage.innerHTML = "Processing GPX...";
         this.uiModalOptions.style.display = 'none';
-    }
-
-    getTourPlotCanvasContext = () => { return this.widgets.find(widget => widget instanceof UITourPlotWidget).ctx; }
-    getChartContext = () =>          { return this.widgets.find(widget => widget instanceof UIChartWidget).chart; }
-  
-    static getWidgetContainer = () => { return }
-
-    applyExternalDataBindings = (bindings) =>
-    {
-        document.querySelectorAll('[data-bind]').forEach(e => 
-        {
-            const binding = bindings.find(b => b[e.getAttribute('data-bind')])
-            const obs =     binding[e.getAttribute('data-bind')];
-
-            /* Currently, only Input elements support two-way bindings */
-            if (e.tagName.toLocaleLowerCase == 'input') bindValue(e, obs);
-            else bindInnerHTML(e, obs);
-        });
     }
 
     applyExternalDataBinding = (binding) =>
@@ -79,7 +54,7 @@ class UIController
         this.uiModalOverlayDiv.style.display = 'none';
         
         /* Show App */
-        this.uiWidgetContainer.style.display = 'grid';
+        UIWC.style.display = 'grid';
 
         let selectedOption = options.find(o => o.tag == this.uiModalSelect.options[this.uiModalSelect.selectedIndex].value);
 
@@ -89,6 +64,13 @@ class UIController
 }
 
 
+// this.analysisDatasets = [
+//     new UIDataset('elevation', 'Elevation', '[m]', this.colorPalette[1].asString(0.1), this.colorPalette[1].asString(1)),
+//     new UIDataset('energy', 'Energy', '[kcal]', this.colorPalette[2].asString(0.1), this.colorPalette[2].asString(1)),
+//     new UIDataset('power', 'Power', '[kcal/s]', this.colorPalette[3].asString(0.1), this.colorPalette[3].asString(1)),
+//     new UIDataset('pace', 'Pace', '[m/s]', this.colorPalette[4].asString(0.1), this.colorPalette[4].asString(1)),
+//     new UIDataset('slope', 'Slope', '[°]', this.colorPalette[5].asString(0.1), this.colorPalette[5].asString(1))
+// ];
 class UIDataset
 {
     constructor(id, title, unit, backgroundColor, borderColor)
@@ -213,8 +195,8 @@ const createChart = (canvas) =>
     Chart.defaults.global.defaultFontColor = "#fff";
     Chart.defaults.scale.gridLines.drawOnChartArea = false;
     /*
-        * Chart JS properties
-        */
+     * Chart JS properties
+     */
     let chartTemplate =
     {
         type: 'scatter',
