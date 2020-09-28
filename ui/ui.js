@@ -1,10 +1,11 @@
+const UIWC = document.getElementById('widgetContainer');
+
 class UIController
 {
     constructor()
     {
         /* Get relevant UI Elements */
         this.uiWidgetContainer = document.getElementById('widgetContainer');
-        this.uiChartDiv = document.getElementById('charts');
         this.uiModalOverlayDiv = document.getElementById('modalOverlay');
         this.uiModalSelect = document.getElementById('modalSelect');
         this.uiModalMessage = document.getElementById('modalMessage');
@@ -16,16 +17,11 @@ class UIController
 
         this.widgets = [
             new UIAppInfoWidget(this.uiWidgetContainer, ''),
-            new UIAscentDescentWidget(this.uiWidgetContainer),
-            new UIEnergyConsumptionWidget(this.uiWidgetContainer),
-            new UISimpleWidget(this.uiWidgetContainer, 'avg. slope', 'equalizer', '°', 'avgSlope'),
-            new UISimpleWidget(this.uiWidgetContainer, 'avg. power', 'power', 'kcal/s', 'avgPower'),
             new UITourPlotWidget(this.uiWidgetContainer, 'tour plot', 500, 500),
             new UIChartWidget(this.uiWidgetContainer, '')
         ]
 
         /* Hide App */
-        this.uiChartDiv.style.display = 'none';
         this.uiWidgetContainer.style.display = 'none';
 
         /* Show modal */
@@ -36,6 +32,7 @@ class UIController
     getTourPlotCanvasContext = () => { return this.widgets.find(widget => widget instanceof UITourPlotWidget).ctx; }
     getChartContext = () =>          { return this.widgets.find(widget => widget instanceof UIChartWidget).chart; }
   
+    static getWidgetContainer = () => { return }
 
     applyExternalDataBindings = (bindings) =>
     {
@@ -50,6 +47,17 @@ class UIController
         });
     }
 
+    applyExternalDataBinding = (binding) =>
+    {
+        document.querySelectorAll('[data-bind]').forEach(e => 
+        {
+            const obs =     binding[e.getAttribute('data-bind')];
+
+            /* Currently, only Input elements support two-way bindings */
+            if (e.tagName.toLocaleLowerCase == 'input') bindValue(e, obs);
+            else bindInnerHTML(e, obs);
+        });
+    }
 
     awaitUserChoice = async(gpxInfo, options) =>
     {
@@ -71,7 +79,6 @@ class UIController
         this.uiModalOverlayDiv.style.display = 'none';
         
         /* Show App */
-        this.uiChartDiv.style.display = 'block';
         this.uiWidgetContainer.style.display = 'grid';
 
         let selectedOption = options.find(o => o.tag == this.uiModalSelect.options[this.uiModalSelect.selectedIndex].value);
@@ -79,182 +86,6 @@ class UIController
         return Promise.resolve(selectedOption.tour);
     }
 
-}
-
-class UIWidget
-{
-    constructor(parent, title, style = '')
-    {
-        this.element = document.createElement('div');
-        this.element.className = `grid-item ${style} grid-item-${parent.childElementCount + 1}`;
-        this.element.innerHTML = title;
-
-        parent.appendChild(this.element);
-    }
-}
-
-class UIAppInfoWidget extends UIWidget
-{
-    constructor(parent, title)
-    {
-        super(parent, title, 'span-2');
-
-        this.h1 = document.createElement('h1');
-        this.h1.className = 'title-name';
-        this.h1.setAttribute('data-bind', 'appTitle');
-
-        this.p = document.createElement('p');
-        this.p.className = 'version';
-        this.p.setAttribute('data-bind', 'appVersion');
-
-        this.element.appendChild(this.h1);
-        this.element.appendChild(this.p);
-    }
-}
-
-class UITourPlotWidget extends UIWidget
-{
-    constructor(parent, title, w, h)
-    {
-        super(parent, title, 'square-3');
-
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = w;
-        this.canvas.height = h;
-
-        this.ctx = this.canvas.getContext('2d');
-
-        this.element.appendChild(this.canvas);
-    }
-}
-
-class UIChartWidget extends UIWidget
-{
-    constructor(parent, title)
-    {
-        super(parent, title, 'span-chart');
-
-        this.canvas = document.createElement('canvas');
-        this.chart = createChart(this.canvas);
-
-        this.element.appendChild(this.canvas);
-    }
-}
-
-class UIAscentDescentWidget extends UIWidget
-{
-    constructor(parent)
-    {
-        super(parent, 'ascent / descent', 'span-2');
-
-        /* Ascent */
-        this.ascentDiv = document.createElement('div');
-        this.ascentDiv.className = 'widget-content';
-
-        this.ascentIcon = document.createElement('p');
-        this.ascentIcon.className = 'material-icons';
-        this.ascentIcon.innerHTML = 'north' 
-        
-        this.ascentH1 = document.createElement('h1');
-        this.ascentH1.className = 'widget-content-inline';
-        this.ascentH1.setAttribute('data-bind', 'ascent');
-        
-        this.ascentH1Unit = document.createElement('h1');
-        this.ascentH1Unit.className = 'widget-content-inline widget-unit';
-        this.ascentH1Unit.innerHTML = ' <i>meters</i>';
-
-        this.ascentDiv.appendChild(this.ascentIcon);
-        this.ascentDiv.appendChild(this.ascentH1);
-        this.ascentDiv.appendChild(this.ascentH1Unit);
-
-        /* Descent */
-        this.descentDiv = document.createElement('div');
-        this.descentDiv.className = 'widget-content';
-
-        this.descentIcon = document.createElement('p');
-        this.descentIcon.className = 'material-icons';
-        this.descentIcon.innerHTML = 'south'
-
-        this.descentH1 = document.createElement('h1');
-        this.descentH1.className = 'widget-content-inline';
-        this.descentH1.setAttribute('data-bind', 'descent');
-
-        this.descentH1Unit = document.createElement('h1');
-        this.descentH1Unit.className = 'widget-content-inline widget-unit';
-        this.descentH1Unit.innerHTML = ' <i>meters</i>';
-
-        this.descentDiv.appendChild(this.descentIcon);
-        this.descentDiv.appendChild(this.descentH1);
-        this.descentDiv.appendChild(this.descentH1Unit);
-
-        this.element.appendChild(this.ascentDiv); 
-        this.element.appendChild(this.descentDiv); 
-    }
-}
-
-class UIEnergyConsumptionWidget extends UIWidget
-{
-    constructor(parent)
-    {
-        super(parent, 'energy consumption', 'span-2');
-
-        this.div = document.createElement('div');
-        this.div.className = 'widget-content';
-
-        this.icon = document.createElement('p');
-        this.icon.className = 'material-icons widget-icon';
-        this.icon.innerHTML = 'local_fire_department' 
-
-        this.p = document.createElement('p');
-        this.p.className = 'widget-description';
-        this.p.innerHTML = `According to "Estimating Energy Expenditure during Level, Uphill, and Downhill Walking" <br>
-        <i>https://pubmed.ncbi.nlm.nih.gov/30973477/</i>`;
-        
-        this.h1 = document.createElement('h1');
-        this.h1.className = 'widget-content-inline';
-        this.h1.setAttribute('data-bind', 'energy');
-
-        this.h1Unit = document.createElement('h1');
-        this.h1Unit.className = 'widget-content-inline widget-unit';
-        this.h1Unit.innerHTML = ' <i>kcal</i>';
-
-        this.div.appendChild(this.p);
-        this.div.appendChild(this.icon);
-        this.div.appendChild(this.h1);
-        this.div.appendChild(this.h1Unit);
-
-        this.element.appendChild(this.div); 
-    }
-}
-
-
-class UISimpleWidget extends UIWidget
-{
-    constructor(parent, title, icon, unit, binding) 
-    {
-        super(parent, title, '');
-
-        this.div = document.createElement('div');
-        this.div.className = 'widget-content';
-
-        this.icon = document.createElement('p');
-        this.icon.className = 'material-icons widget-icon';
-        this.icon.innerHTML = icon
-
-        this.h1 = document.createElement('h1');
-        this.h1.className = 'widget-content-inline';
-        this.h1.setAttribute('data-bind', binding);
-
-        this.h1Unit = document.createElement('h1');
-        this.h1Unit.className = 'widget-content-inline widget-unit';
-        this.h1Unit.innerHTML = ` <i>${unit}</i>`;
-
-        this.div.appendChild(this.icon);
-        this.div.appendChild(this.h1);
-        this.div.appendChild(this.h1Unit);
-
-        this.element.appendChild(this.div);
-    }
 }
 
 

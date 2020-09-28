@@ -34,6 +34,10 @@ class GPXView
         if (tour instanceof GPXRoute) this.points = tour.content;
         else tour.content.forEach(seg => this.points = this.points.concat(seg.content));
 
+
+        /* Retrieve all possible analysis types */
+        this.analyzers = GPXAnalysisBuilder.build(this.points)
+
         this.bounds = Object.assign(tour.getExtrema('ele'), tour.getExtrema('time'), tour.getExtrema('lat'), tour.getExtrema('lon'));
         
         this.analysisChart = ui.getChartContext();
@@ -126,9 +130,17 @@ class GPXView
         /* Evalutate transitions between points  */
         for (let i = 0; i < this.points.length; i++)
         {
+            this.analyzers.forEach(a => a.analyzePoint(this.points[i]));
+            
             /* Transitions can only be analyzed until i + 1 */
             if (i < this.points.length - 1)
             {
+                this.analyzers.forEach(a => a.analyzeTransition(this.points[i], this.points[i + 1]));
+
+
+
+
+                
                 let d = this.points[i].haverSine(this.points[i + 1]);         /* [m] */
                 let Δh = this.points[i + 1].heightDifference(this.points[i]); /* [m] */
                 let Δt = this.points[i + 1].timeDifference(this.points[i]);   /* [s] */
@@ -164,6 +176,10 @@ class GPXView
             elevationDataset._rawData.push({ y: this.points[i].attributes.ele, x: this.points[i].attributes.time });
         }
 
+        this.analyzers.forEach(a => a.analyzeTransition(this.points[this.points.length - 2], this.points[this.points.length - 1]));
+        this.analyzers.forEach(a => a.finalize());
+
+
         /* Finalize analysisData */
         ascentData.ascent._value     = ascentData.ascent._value.toFixed(2);
         descentData.descent._value   = descentData.descent._value.toFixed(2);
@@ -179,7 +195,6 @@ class GPXView
         this.analysisChart.update();
     }
 }
-
 
 /*
  * GPX Analysis helper functions

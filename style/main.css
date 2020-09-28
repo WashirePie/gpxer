@@ -88,6 +88,16 @@ body
         background-color: #292929;
 }
 
+.row-3
+{
+    grid-row-end: span 3;
+}
+
+.row-4
+{
+    grid-row-end: span 4;
+}
+
 .span-2 
 {
     grid-column-end: span 2;
