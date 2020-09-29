@@ -11,33 +11,42 @@ class GPXView
 
         this.bounds = Object.assign(tour.getExtrema('ele'), tour.getExtrema('time'), tour.getExtrema('lat'), tour.getExtrema('lon'));
 
-        /* Retrieve all possible analysis types */
-        this.analyzers = GPXAnalysisBuilder.build(this.points)
+        /* Retrieve capabilities */
+        let capabilities = GPXAnalysisBuilder.build(this.points)
+        this.analyzers = capabilities.analyzers;
+        this.widgets =   capabilities.widgets;
+        this.datasets =  capabilities.datasets;
 
-        /* Call widget functions */
-        this.analyzers.forEach(a =>
-        {
-            a.widgets.find(w => w instanceof UITourPlotWidget)?.plot(this.points, this.bounds);            
-        })
-
-        this.tourAnalysis();
+        this.executeCapabilities();
     }
 
 
-
-    tourAnalysis = () =>
+    executeCapabilities = () =>
     {
+        /* Execute analysis  */
         this.analyzers.forEach(a => a.resetData());
-
-        /* Evalutate transitions between points  */
         for (let i = 0; i < this.points.length; i++)
         {
-            if (i < this.points.length - 1) 
+            if (i < this.points.length - 1)
                 this.analyzers.forEach(a => a.analyzeTransition(this.points[i], this.points[i + 1], i));
         }
 
         this.analyzers.forEach(a => a.analyzeTransition(this.points[this.points.length - 2], this.points[this.points.length - 1]));
         this.analyzers.forEach(a => a.finalize());
+
+        /* Execute widget functions */
+        this.widgets.forEach(w => 
+        {
+            if (w instanceof UITourPlotWidget) w.plot(this.points, this.bounds);
+            if (w instanceof UIChartWidget) 
+            {
+                w.chart._removeDatasets();
+                w.chart._addDatasets(this.datasets);
+                w.chart.update();
+            }
+        });
+
+
     }
 }
 

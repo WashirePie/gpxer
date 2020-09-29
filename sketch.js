@@ -50,8 +50,6 @@ let main = async() =>
         appTitle: new Observable('gpxer')
     };
     
-    let chart = new UIChartWidget(UIWC, '');
-
     gpxv.analyzers.forEach(a =>
     {
        if (a.dataBinding) Object.assign(dataBinding, a.dataBinding); 
@@ -64,8 +62,8 @@ let main = async() =>
     let gui = new dat.GUI();
 
     let pf = gui.addFolder('Analysis Parameters');
-    pf.add(personData, 'weight', 30, 150, 0.5).onFinishChange(() => { gpxv.tourAnalysis(); });
-    pf.add(personData, 'additionalWeight', 0, 100, 0.5).onFinishChange(() => { gpxv.tourAnalysis(); });
+    pf.add(personData, 'weight', 30, 150, 0.5).onFinishChange(() => { gpxv.executeCapabilities(); });
+    pf.add(personData, 'additionalWeight', 0, 100, 0.5).onFinishChange(() => { gpxv.executeCapabilities(); });
 }
 
 setTimeout(main, 0);

@@ -73,18 +73,13 @@ class UIController
 // ];
 class UIDataset
 {
-    constructor(id, title, unit, backgroundColor, borderColor)
+    constructor(title, unit, rawData)
     {
-        this._id = id;
         this._title = title;
         this._unit = unit;
 
-        this._rawData = [];
-        this._dataResolution = 10;
-        this._backgroundColor = [backgroundColor];
-        this._borderColor = [borderColor];
-        this._borderWidth = 3;
-        this._pointRadius = 1;
+        this._rawData = rawData;
+        this._dataResolution = 60;
 
         this._yAxisId = `${this._title.replace(/\s/g, '')}_yID`;
         this._xAxisId = `${this._title.replace(/\s/g, '')}_xID`;
@@ -126,20 +121,6 @@ class UIDataset
 
     set dataResolution(val)  { this._dataResolution = val;  this._setData(); }
     get dataResolution() { return this._dataResolution; }
-
-    // set backgroundColor(hexStr) { this._backgroundColor = RGBAColor.fromHEX(hexStr).asString(); }
-    // get backgroundColor() { return RGBAColor.fromRGBA(this._backgroundColor).asHEXString(); }   
-    set backgroundColor(rgbaStr) { this._backgroundColor[0] = rgbaStr; }
-    get backgroundColor() { return this._backgroundColor[0] }   
-
-    set borderColor(hexStr) { this._borderColor = RGBAColor.fromHEX(hexStr).asString(); }
-    get borderColor() { return RGBAColor.fromRGBA(this._borderColor).asHEXString(); }
-
-    set borderWidth(val) { this._borderWidth = val; }
-    get borderWidth() { return this._borderWidth; }
-
-    set pointRadius(val) { this._pointRadius = val; }
-    get pointRadius() { return this._pointRadius; }
 
     _setData = () =>
     {
