@@ -32,9 +32,8 @@ class GPXView
         /* Evalutate transitions between points  */
         for (let i = 0; i < this.points.length; i++)
         {
-            this.analyzers.forEach(a => a.analyzePoint(this.points[i]), i);
-            if (i < this.points.length - 1) this.analyzers.forEach(a => a.analyzeTransition(this.points[i], this.points[i + 1]));
-            
+            if (i < this.points.length - 1) 
+                this.analyzers.forEach(a => a.analyzeTransition(this.points[i], this.points[i + 1], i));
         }
 
         this.analyzers.forEach(a => a.analyzeTransition(this.points[this.points.length - 2], this.points[this.points.length - 1]));
