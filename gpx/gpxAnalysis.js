@@ -56,8 +56,8 @@ class GPXAnalysisBuilder
             const unit = 'm';
 
             let a = new GPXMinMaxGainLossAnalysis(bindingName, 'ele');
-            let w = new UIQuadWidget(UIWC, 'row-4', bindingName, 'arrow_drop_down', 'arrow_drop_up', 'arrow_upward', 'arrow_downward', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Gain`, `${bindingName}Loss`);
-            let w1 = new UITourPlotWidget(UIWC, 'tour plot', 500, 500);
+            let w = new UITourPlotWidget(UIWC, 'tour plot', 500, 500);
+            let w1 = new UIQuadWidget(UIWC, 'span-1 row-2', bindingName, 'arrow_upward', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Gain`, `${bindingName}Loss`);
             let ds = new UIDataset(bindingName, unit, a.graph);
 
             widgets.push(w, w1);
@@ -80,8 +80,8 @@ class GPXAnalysisBuilder
         {
             const bindingName = 'distance';
 
-            let a = new GPXSumAnalysis(bindingName, (p1, p2) => { return p1.haverSine(p2) })
-            let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'settings_ethernet', 'm', bindingName, '');
+            let a = new GPXSumAnalysis(bindingName, (p1, p2) => { return p1.haverSine(p2) / 1000 })
+            let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'settings_ethernet', 'km', bindingName, '');
 
             widgets.push(w)
             analyzers.push(a);
@@ -100,7 +100,7 @@ class GPXAnalysisBuilder
                     if (d != 0) return Math.atan(Δh / d) * (180 / Math.PI); /* [°] */
                 }
             );
-            let w = new UITripleWidget(UIWC, 'row-3', bindingName, 'signal_cellular_null', 'signal_cellular_null', 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`)
+            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`)
             let ds = new UIDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
@@ -122,7 +122,7 @@ class GPXAnalysisBuilder
                     if (Δh != 0 && Δt != 0 ) return Δh / Δt; /* [m/s] */
                 }
             );
-            let w = new UITripleWidget(UIWC, 'row-3', bindingName, 'call_made', 'call_made', 'call_made', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
+            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'call_made', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
             let ds = new UIDataset(bindingName, unit, a.graph);
             
             widgets.push(w)
@@ -143,7 +143,7 @@ class GPXAnalysisBuilder
                     if (d != 0) return d / Δt;      /* [m/s] */
                 }
             );
-            let w = new UITripleWidget(UIWC, 'row-3', bindingName, 'speed', 'speed', 'speed', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
+            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'speed', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
             let ds = new UIDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
@@ -169,7 +169,7 @@ class GPXAnalysisBuilder
                         let v = d / Δt;                       /* [m/s] */
                         let ii = gradient(d, Δh);             /* [%] */
                         let ee = expendedEnergyHiking(v, ii); /* Energy expenditure [(w/kg)/h] */
-                            ee *= weight;                     /* [w] */
+                            ee *= weight;                     /* [w/h] */
                             ee /= 3600;                       /* [w/s] */
                             ee *= Δt                          /* [w] */
                         return ee; 
@@ -177,7 +177,7 @@ class GPXAnalysisBuilder
                 }
             );
 
-            let w = new UITripleWidget(UIWC, 'row-3', bindingName, 'power', 'power', 'power', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
+            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'power', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
             let ds = new UIDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
@@ -188,7 +188,6 @@ class GPXAnalysisBuilder
         if (hasLatLon && hasTime && hasEle)
         {
             const bindingName = 'energy';
-            window.test = 0;
             let a = new GPXSumAnalysis(bindingName, 
                 (p1, p2) => 
                 {
@@ -202,18 +201,17 @@ class GPXAnalysisBuilder
                         let v = d / Δt;                       /* [m/s] */
                         let ii = gradient(d, Δh);             /* [%] */
                         let ee = expendedEnergyHiking(v, ii); /* Energy expenditure [(w/kg)/h] */
-                            ee *= weight;                     /* [w] */
-                            ee /= 4186.8;                     /* [kcal/s] -> 1 1kcal/s = 4186.8w */
+                            ee *= weight;                     /* [w/h] */
+                            ee /= 4186.8;                     /* [kcal/s] (1kcal/s = 4186.8w or w/h) */
                             ee *= Δt;                         /* [kcal] */
                         return ee
-                    }
+                    } else return 0;
                 }
             );
 
-
-            let w = new UISingleWidget(UIWC, 'span-2', `total ${bindingName}`, 'local_fire_department', 'kcal', bindingName, `According to: "Estimating Energy Expenditure during Level, Uphill, and Downhill Walking"
-                by David P. Looney, William R. Santee, Eric O. Hansen, Peter J. Bonventre, Christopher R. Chalmers, Adam W. Potter, Sept 2019
-                <i>https://pubmed.ncbi.nlm.nih.gov/30973477/</i>`);
+            let w = new UISingleWidget(UIWC, 'span-1 row-2', `total ${bindingName}`, 'local_fire_department', 'kcal', bindingName, `According to: 
+                <a href="https://pubmed.ncbi.nlm.nih.gov/30973477/" target="_blank">"Estimating Energy Expenditure during Level, Uphill, and Downhill Walking"</a>
+                by David P. Looney, William R. Santee, Eric O. Hansen, Peter J. Bonventre, Christopher R. Chalmers, Adam W. Potter, Sept 2019`);
 
             widgets.push(w)
             analyzers.push(a);
@@ -250,11 +248,19 @@ class GPXSumAnalysis extends GPXAnalysis
     {
         super();
         this.dataBinding[bindingName] = new Observable(0);
-        this.temp;
 
-        this.resetData = () => { this.temp = 0; }
-        this.analyzeTransition = (p1, p2) => { this.temp += transitionFunction.call(this, p1, p2); }
-        this.finalize = () => { this.dataBinding[bindingName]._value = this.temp.toFixed(2); }
+        this.resetData = () => 
+        { 
+            this.temp = 0; 
+        }
+        this.analyzeTransition = (p1, p2) => 
+        { 
+            this.temp += transitionFunction.call(this, p1, p2); 
+        }
+        this.finalize = () => 
+        { 
+            this.dataBinding[bindingName].value = this.temp.toFixed(2); 
+        }
     }
 }
 
@@ -294,9 +300,9 @@ class GPXMinMaxAverageAnalysis extends GPXAnalysis
         }
         this.finalize = () => 
         {
-            this.dataBinding[`${bindingName}Max`]._value =  this[`${bindingName}MaxTemp`].toFixed(2);
-            this.dataBinding[`${bindingName}Min`]._value =  this[`${bindingName}MinTemp`].toFixed(2);
-            this.dataBinding[`${bindingName}Avg`]._value = (this[`${bindingName}AvgTemp`] / this.graph.length).toFixed(2);
+            this.dataBinding[`${bindingName}Max`].value =  this[`${bindingName}MaxTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Min`].value =  this[`${bindingName}MinTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Avg`].value = (this[`${bindingName}AvgTemp`] / this.graph.length).toFixed(2);
         }
     }
 }
@@ -339,10 +345,10 @@ class GPXMinMaxGainLossAnalysis extends GPXAnalysis
         }
         this.finalize = () =>
         { 
-            this.dataBinding[`${bindingName}Max`]._value  = this[`${bindingName}MaxTemp`].toFixed(2);
-            this.dataBinding[`${bindingName}Min`]._value  = this[`${bindingName}MinTemp`].toFixed(2);
-            this.dataBinding[`${bindingName}Gain`]._value = this[`${bindingName}GainTemp`].toFixed(2);
-            this.dataBinding[`${bindingName}Loss`]._value = this[`${bindingName}LossTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Max`].value  = this[`${bindingName}MaxTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Min`].value  = this[`${bindingName}MinTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Gain`].value = this[`${bindingName}GainTemp`].toFixed(2);
+            this.dataBinding[`${bindingName}Loss`].value = this[`${bindingName}LossTemp`].toFixed(2);
         }
     }
 }

@@ -1,6 +1,4 @@
-const UIWC = document.getElementById('widgetContainer');
-
-class UIController
+class UIModal
 {
     constructor()
     {
@@ -14,24 +12,9 @@ class UIController
         /* Properties */
         this.dataBindings = {};
 
-        /* Hide App */
-        UIWC.style.display = 'none';
-
         /* Show modal */
         this.uiModalMessage.innerHTML = "Processing GPX...";
         this.uiModalOptions.style.display = 'none';
-    }
-
-    applyExternalDataBinding = (binding) =>
-    {
-        document.querySelectorAll('[data-bind]').forEach(e => 
-        {
-            const obs =     binding[e.getAttribute('data-bind')];
-
-            /* Currently, only Input elements support two-way bindings */
-            if (e.tagName.toLocaleLowerCase == 'input') bindValue(e, obs);
-            else bindInnerHTML(e, obs);
-        });
     }
 
     awaitUserChoice = async(gpxInfo, options) =>
@@ -53,9 +36,6 @@ class UIController
         /* Hide modal */
         this.uiModalOverlayDiv.style.display = 'none';
         
-        /* Show App */
-        UIWC.style.display = 'grid';
-
         let selectedOption = options.find(o => o.tag == this.uiModalSelect.options[this.uiModalSelect.selectedIndex].value);
 
         return Promise.resolve(selectedOption.tour);
@@ -64,13 +44,6 @@ class UIController
 }
 
 
-// this.analysisDatasets = [
-//     new UIDataset('elevation', 'Elevation', '[m]', this.colorPalette[1].asString(0.1), this.colorPalette[1].asString(1)),
-//     new UIDataset('energy', 'Energy', '[kcal]', this.colorPalette[2].asString(0.1), this.colorPalette[2].asString(1)),
-//     new UIDataset('power', 'Power', '[kcal/s]', this.colorPalette[3].asString(0.1), this.colorPalette[3].asString(1)),
-//     new UIDataset('pace', 'Pace', '[m/s]', this.colorPalette[4].asString(0.1), this.colorPalette[4].asString(1)),
-//     new UIDataset('slope', 'Slope', '[°]', this.colorPalette[5].asString(0.1), this.colorPalette[5].asString(1))
-// ];
 class UIDataset
 {
     constructor(title, unit, rawData)
@@ -235,4 +208,82 @@ const createChart = (canvas) =>
     }
 
     return chart;
+}
+
+
+
+class RGBAColor
+{
+    constructor(r, g, b, a)
+    {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
+
+    static fromRGBA = (rgba) =>
+    {
+        let re = /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+(?:\.\d+)?)\s*\)$/
+        let match = re.exec(rgba);
+
+        if (!match) return null;
+        else if (match[1] && match[2] && match[3] && match[4])
+        {
+            let r = parseInt(match[1], 10);
+            let g = parseInt(match[2], 10);
+            let b = parseInt(match[3], 10);
+            let a = parseInt(match[4], 10);
+            return new RGBAColor(r, g, b, a);
+        }
+        else return null;
+    }
+
+    static fromHEX = (str, alpha = 1) =>
+    {
+        let re = /^#([a-fA-F0-9][a-fA-F0-9])([a-fA-F0-9][a-fA-F0-9])?([a-fA-F0-9][a-fA-F0-9])?$/;
+        let match = re.exec(str);
+
+        if (!match) return null;
+        else if (!match[2] && !match[3])
+        {
+            let c = parseInt(Number(`0x${match[1]}`), 10);
+            return new RGBAColor(c, c, c, 1);
+        }
+        else if (match.length == 4)
+        {
+            let r = parseInt(Number(`0x${match[1]}`), 10);
+            let g = parseInt(Number(`0x${match[2]}`), 10);
+            let b = parseInt(Number(`0x${match[3]}`), 10);
+            return new RGBAColor(r, g, b, alpha);
+        }
+        else return null;
+
+    }
+
+    asString(alpha = this.a, percent = 1)
+    {
+        let r = this.r * percent;
+        let g = this.g * percent;
+        let b = this.b * percent;
+
+        r = r > 255 ? 255 : r;
+        g = g > 255 ? 255 : g;
+        b = b > 255 ? 255 : b;
+
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    asHEXString(percent = 1)
+    {
+        let r = this.r * percent;
+        let g = this.g * percent;
+        let b = this.b * percent;
+        let a = this.a;
+
+        r = r > 255 ? 255 : r;
+        g = g > 255 ? 255 : g;
+        b = b > 255 ? 255 : b;
+        return `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`
+    }
 }

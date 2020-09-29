@@ -18,7 +18,8 @@ let gpx = null;
 let gpxv = null;
 let ui = null;
 
-const personData = {
+const UIWC = document.getElementById('widgetContainer');
+let personData = {
     weight: 80,
     additionalWeight: 3,
     age: 25
@@ -38,31 +39,15 @@ const colorPalette = [
 
 let main = async() =>
 {
-    ui   = new UIController();
-    
-    let appInfo = new UIAppInfoWidget(UIWC, '');
-
+    ui   = new UIModal();
     gpx  = GPXConverter.parse(testGpxString2);
     gpxv = new GPXView(await ui.awaitUserChoice('GPX', gpx.getTourList()));
-
-    let dataBinding = {
-        appVersion: new Observable('v0.0.0 (beta)'),
-        appTitle: new Observable('gpxer')
-    };
     
-    gpxv.analyzers.forEach(a =>
-    {
-       if (a.dataBinding) Object.assign(dataBinding, a.dataBinding); 
-    });
-
-    
-    ui.applyExternalDataBinding(dataBinding);
-
     /* Add dat.GUI Controls */
     let gui = new dat.GUI();
 
     let pf = gui.addFolder('Analysis Parameters');
-    pf.add(personData, 'weight', 30, 150, 0.5).onFinishChange(() => { gpxv.executeCapabilities(); });
+    pf.add(personData, 'weight', 30, 150, 0.5).onFinishChange(() =>          { gpxv.executeCapabilities(); });
     pf.add(personData, 'additionalWeight', 0, 100, 0.5).onFinishChange(() => { gpxv.executeCapabilities(); });
 }
 

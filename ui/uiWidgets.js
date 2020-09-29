@@ -1,10 +1,20 @@
 class UIWidget
 {
-    constructor(parent, title, style = '')
+    constructor(parent, title, icon, style = 'span-1 row-1')
     {
         this.element = document.createElement('div');
         this.element.className = `grid-item ${style} grid-item-${parent.childElementCount + 1}`;
-        this.element.innerHTML = title;
+
+        this.icon = document.createElement('p');
+        this.icon.className = 'material-icons widget-icon';
+        this.icon.innerHTML = icon;
+
+        this.title = document.createElement('p');
+        this.title.className = 'widget-title';
+        this.title.innerHTML = title;
+
+        this.element.appendChild(this.icon);
+        this.element.appendChild(this.title);
 
         parent.appendChild(this.element);
     }
@@ -14,7 +24,7 @@ class UIAppInfoWidget extends UIWidget
 {
     constructor(parent, title)
     {
-        super(parent, title, 'span-2');
+        super(parent, title, '', 'span-full row-1');
 
         this.h1 = document.createElement('h1');
         this.h1.className = 'title-name';
@@ -33,7 +43,7 @@ class UITourPlotWidget extends UIWidget
 {
     constructor(parent, title, w, h)
     {
-        super(parent, title, 'square-3');
+        super(parent, title, '', 'span-3 row-3');
 
         this.canvas = document.createElement('canvas');
         this.canvas.width = w;
@@ -47,6 +57,8 @@ class UITourPlotWidget extends UIWidget
     plot = (points, bounds) =>
     {
         let bufferSize = this.ctx.canvas.width;
+
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         this.ctx.beginPath();
         this.ctx.strokeStyle = '#fff';
@@ -70,7 +82,7 @@ class UIChartWidget extends UIWidget
 {
     constructor(parent, title)
     {
-        super(parent, title, 'span-chart');
+        super(parent, title, '', 'span-full row-4');
 
         this.canvas = document.createElement('canvas');
         this.chart = createChart(this.canvas);
@@ -79,106 +91,15 @@ class UIChartWidget extends UIWidget
     }
 }
 
-class UIAscentDescentWidget extends UIWidget
-{
-    constructor(parent)
-    {
-        super(parent, 'ascent / descent', 'span-2');
-
-        /* Ascent */
-        this.ascentDiv = document.createElement('div');
-        this.ascentDiv.className = 'widget-content';
-
-        this.ascentIcon = document.createElement('p');
-        this.ascentIcon.className = 'material-icons';
-        this.ascentIcon.innerHTML = 'north' 
-        
-        this.ascentH1 = document.createElement('h1');
-        this.ascentH1.className = 'widget-content-inline';
-        this.ascentH1.setAttribute('data-bind', 'ascent');
-        
-        this.ascentH1Unit = document.createElement('h1');
-        this.ascentH1Unit.className = 'widget-content-inline widget-unit';
-        this.ascentH1Unit.innerHTML = ' <i>meters</i>';
-
-        this.ascentDiv.appendChild(this.ascentIcon);
-        this.ascentDiv.appendChild(this.ascentH1);
-        this.ascentDiv.appendChild(this.ascentH1Unit);
-
-        /* Descent */
-        this.descentDiv = document.createElement('div');
-        this.descentDiv.className = 'widget-content';
-
-        this.descentIcon = document.createElement('p');
-        this.descentIcon.className = 'material-icons';
-        this.descentIcon.innerHTML = 'south'
-
-        this.descentH1 = document.createElement('h1');
-        this.descentH1.className = 'widget-content-inline';
-        this.descentH1.setAttribute('data-bind', 'descent');
-
-        this.descentH1Unit = document.createElement('h1');
-        this.descentH1Unit.className = 'widget-content-inline widget-unit';
-        this.descentH1Unit.innerHTML = ' <i>meters</i>';
-
-        this.descentDiv.appendChild(this.descentIcon);
-        this.descentDiv.appendChild(this.descentH1);
-        this.descentDiv.appendChild(this.descentH1Unit);
-
-        this.element.appendChild(this.ascentDiv); 
-        this.element.appendChild(this.descentDiv); 
-    }
-}
-
-class UIEnergyConsumptionWidget extends UIWidget
-{
-    constructor(parent)
-    {
-        super(parent, 'energy consumption', 'square-2');
-
-        this.div = document.createElement('div');
-        this.div.className = 'widget-content';
-
-        this.icon = document.createElement('p');
-        this.icon.className = 'material-icons widget-icon';
-        this.icon.innerHTML = 'local_fire_department' 
-
-        this.p = document.createElement('p');
-        this.p.className = 'widget-description';
-        this.p.innerHTML = `According to "Estimating Energy Expenditure during Level, Uphill, and Downhill Walking" <br>
-        <i>https://pubmed.ncbi.nlm.nih.gov/30973477/</i>`;
-        
-        this.h1 = document.createElement('h1');
-        this.h1.className = 'widget-content-inline';
-        this.h1.setAttribute('data-bind', 'energy');
-
-        this.h1Unit = document.createElement('h1');
-        this.h1Unit.className = 'widget-content-inline widget-unit';
-        this.h1Unit.innerHTML = ' <i>kcal</i>';
-
-        this.div.appendChild(this.p);
-        this.div.appendChild(this.icon);
-        this.div.appendChild(this.h1);
-        this.div.appendChild(this.h1Unit);
-
-        this.element.appendChild(this.div); 
-    }
-}
-
 class UISingleWidget extends UIWidget
 {
     constructor(parent, style, title, icon, unit, binding, description = '') 
     {
-        super(parent, title, style);
+        super(parent, title, icon, style);
 
         this.div = document.createElement('div');
         this.div.className = 'widget-content';
 
-        
-        this.icon = document.createElement('p');
-        this.icon.className = 'material-icons widget-icon';
-        this.icon.innerHTML = icon
-        
         this.h1 = document.createElement('h1');
         this.h1.className = 'widget-content-inline';
         this.h1.setAttribute('data-bind', binding);
@@ -195,7 +116,6 @@ class UISingleWidget extends UIWidget
     
             this.div.appendChild(this.p);
         }
-        this.div.appendChild(this.icon);
         this.div.appendChild(this.h1);
         this.div.appendChild(this.h1Unit);
 
@@ -205,25 +125,13 @@ class UISingleWidget extends UIWidget
 
 class UITripleWidget extends UIWidget
 {
-    constructor(parent, style, title, iconMin, iconMax, iconAvg, unit, bindingMin, bindingMax, bindingAvg)
+    constructor(parent, style, title, icon, unit, bindingMin, bindingMax, bindingAvg)
     {
-        super(parent, title, style);
+        super(parent, title, icon, style);
 
         this.div = document.createElement('div');
         this.div.className = 'widget-content';
-
-        /* Icons */
-        this.iconMin = document.createElement('p');
-        this.iconMin.className = 'material-icons widget-icon';
-        this.iconMin.innerHTML = iconMin
-
-        this.iconMax = document.createElement('p');
-        this.iconMax.className = 'material-icons widget-icon';
-        this.iconMax.innerHTML = iconMax
-
-        this.iconAvg = document.createElement('p');
-        this.iconAvg.className = 'material-icons widget-icon';
-        this.iconAvg.innerHTML = iconAvg
+        
 
         this.h1Min = document.createElement('h1');
         this.h1Min.className = 'widget-content-inline';
@@ -262,17 +170,14 @@ class UITripleWidget extends UIWidget
         this.pAvg.innerHTML = `avg`;
 
         this.div.appendChild(this.pMin);
-        this.div.appendChild(this.iconMin);
         this.div.appendChild(this.h1Min);
         this.div.appendChild(this.h1UnitMin);
 
         this.div.appendChild(this.pMax);
-        this.div.appendChild(this.iconMax);
         this.div.appendChild(this.h1Max);
         this.div.appendChild(this.h1UnitMax);
 
         this.div.appendChild(this.pAvg);
-        this.div.appendChild(this.iconAvg);
         this.div.appendChild(this.h1Avg);
         this.div.appendChild(this.h1UnitAvg);
 
@@ -282,29 +187,12 @@ class UITripleWidget extends UIWidget
 
 class UIQuadWidget extends UIWidget 
 {
-    constructor(parent, style, title, iconMin, iconMax, iconVal1, iconVal2, unit, bindingMin, bindingMax, bindingVal1, bindingVal2) 
+    constructor(parent, style, title, icon, unit, bindingMin, bindingMax, bindingVal1, bindingVal2) 
     {
-        super(parent, title, style);
+        super(parent, title, icon, style);
 
         this.div = document.createElement('div');
         this.div.className = 'widget-content';
-
-        /* Icons */
-        this.iconMin = document.createElement('p');
-        this.iconMin.className = 'material-icons widget-icon';
-        this.iconMin.innerHTML = iconMin;
-
-        this.iconMax = document.createElement('p');
-        this.iconMax.className = 'material-icons widget-icon';
-        this.iconMax.innerHTML = iconMax;
-
-        this.iconVal1 = document.createElement('p');
-        this.iconVal1.className = 'material-icons widget-icon';
-        this.iconVal1.innerHTML = iconVal1;
-
-        this.iconVal2 = document.createElement('p');
-        this.iconVal2.className = 'material-icons widget-icon';
-        this.iconVal2.innerHTML = iconVal2;
 
         this.h1Min = document.createElement('h1');
         this.h1Min.className = 'widget-content-inline';
@@ -355,22 +243,18 @@ class UIQuadWidget extends UIWidget
         this.pVal2.innerHTML = bindingVal2; /* As label */
 
         this.div.appendChild(this.pMin);
-        this.div.appendChild(this.iconMin);
         this.div.appendChild(this.h1Min);
         this.div.appendChild(this.h1UnitMin);
 
         this.div.appendChild(this.pMax);
-        this.div.appendChild(this.iconMax);
         this.div.appendChild(this.h1Max);
         this.div.appendChild(this.h1UnitMax);
 
         this.div.appendChild(this.pVal1);
-        this.div.appendChild(this.iconVal1);
         this.div.appendChild(this.h1Val1);
         this.div.appendChild(this.h1UnitVal1);
 
         this.div.appendChild(this.pVal2);
-        this.div.appendChild(this.iconVal2);
         this.div.appendChild(this.h1Val2);
         this.div.appendChild(this.h1UnitVal2);
 
