@@ -169,13 +169,14 @@ class UITripleWidget extends UIWidget
         this.pAvg.className = 'widget-description';
         this.pAvg.innerHTML = `avg`;
 
+        this.div.appendChild(this.pMax);
+        this.div.appendChild(this.h1Max);
+        this.div.appendChild(this.h1UnitMax);
+
         this.div.appendChild(this.pMin);
         this.div.appendChild(this.h1Min);
         this.div.appendChild(this.h1UnitMin);
 
-        this.div.appendChild(this.pMax);
-        this.div.appendChild(this.h1Max);
-        this.div.appendChild(this.h1UnitMax);
 
         this.div.appendChild(this.pAvg);
         this.div.appendChild(this.h1Avg);
@@ -242,13 +243,13 @@ class UIQuadWidget extends UIWidget
         this.pVal2.className = 'widget-description';
         this.pVal2.innerHTML = bindingVal2; /* As label */
 
-        this.div.appendChild(this.pMin);
-        this.div.appendChild(this.h1Min);
-        this.div.appendChild(this.h1UnitMin);
-
         this.div.appendChild(this.pMax);
         this.div.appendChild(this.h1Max);
         this.div.appendChild(this.h1UnitMax);
+
+        this.div.appendChild(this.pMin);
+        this.div.appendChild(this.h1Min);
+        this.div.appendChild(this.h1UnitMin);
 
         this.div.appendChild(this.pVal1);
         this.div.appendChild(this.h1Val1);

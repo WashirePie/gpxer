@@ -69,8 +69,8 @@ class GPXAnalysisBuilder
         {
             const bindingName = 'duration';
 
-            let a = new GPXSumAnalysis(bindingName, (p1, p2) => { return p2.timeDifference(p1) })
-            let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'watch_later', 's', bindingName, '');
+            let a = new GPXSumAnalysis(bindingName, (p1, p2) => { return p2.timeDifference(p1) }, (v) => { return secondsToDurationString(v); });
+            let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'watch_later', '', bindingName, 'hh:mm:ss.ms');
 
             widgets.push(w)
             analyzers.push(a);
@@ -80,7 +80,7 @@ class GPXAnalysisBuilder
         {
             const bindingName = 'distance';
 
-            let a = new GPXSumAnalysis(bindingName, (p1, p2) => { return p1.haverSine(p2) / 1000 })
+            let a = new GPXSumAnalysis(bindingName, (p1, p2, index, userData) => { return p1.haverSine(p2) / 1000 });
             let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'settings_ethernet', 'km', bindingName, '');
 
             widgets.push(w)
@@ -93,14 +93,14 @@ class GPXAnalysisBuilder
             const unit = '°';
 
             let a = new GPXMinMaxAverageAnalysis(bindingName, 
-                (p1, p2) =>
+                (p1, p2, index, userData) =>
                 {
                     let d = p1.haverSine(p2);                               /* [m] */
                     let Δh = p2.heightDifference(p1);                       /* [m] */
                     if (d != 0) return Math.atan(Δh / d) * (180 / Math.PI); /* [°] */
                 }
             );
-            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`)
+            let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
             let ds = new UIDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
@@ -114,7 +114,7 @@ class GPXAnalysisBuilder
             const unit = 'm/s';
 
             let a = new GPXMinMaxAverageAnalysis(bindingName,
-                (p1, p2) =>
+                (p1, p2, index, userData) =>
                 {
                     /* TODO: Currently just summing Up & Downwards vertical speed - doesn't say too much */
                     let Δh = p2.heightDifference(p1);        /* [m] */
@@ -136,7 +136,7 @@ class GPXAnalysisBuilder
             const unit = 'm/s';
 
             let a = new GPXMinMaxAverageAnalysis(bindingName,
-                (p1, p2) =>
+                (p1, p2, index, userData) =>
                 {
                     let d = p1.haverSine(p2);       /* [m] */
                     let Δt = p2.timeDifference(p1); /* [s] */
@@ -154,10 +154,10 @@ class GPXAnalysisBuilder
         if (hasLatLon && hasTime && hasEle) 
         {
             const bindingName = 'power';
-            const unit = 'w';
+            const unit = 'w/s';
 
             let a = new GPXMinMaxAverageAnalysis(bindingName,
-                (p1, p2) =>
+                (p1, p2, index, userData) =>
                 {
                     let d = p1.haverSine(p2);         /* [m] */
                     let Δh = p2.heightDifference(p1); /* [m] */
@@ -165,13 +165,16 @@ class GPXAnalysisBuilder
                     
                     if (d != 0) 
                     {
-                        let weight = personData.weight + personData.additionalWeight; /* [kg] */
+                        let weight = userData.weight + userData.additionalWeight; /* [kg] */
                         let v = d / Δt;                       /* [m/s] */
                         let ii = gradient(d, Δh);             /* [%] */
                         let ee = expendedEnergyHiking(v, ii); /* Energy expenditure [(w/kg)/h] */
                             ee *= weight;                     /* [w/h] */
                             ee /= 3600;                       /* [w/s] */
-                            ee *= Δt                          /* [w] */
+                            // ee *= Δt                          /* [w] */ 
+                            /* Could be misleading if multiplied by Δt, since Δt varies. A good example is if you pass f.e. trough a tunnel.
+                            the next point may be a few hundred meters away and a few meters higher which will result in a huge power value therefore misleading the 
+                            observer */
                         return ee; 
                     }
                 }
@@ -189,7 +192,7 @@ class GPXAnalysisBuilder
         {
             const bindingName = 'energy';
             let a = new GPXSumAnalysis(bindingName, 
-                (p1, p2) => 
+                (p1, p2, index, userData) => 
                 {
                     let d = p1.haverSine(p2);         /* [m] */
                     let Δh = p2.heightDifference(p1); /* [m] */
@@ -197,7 +200,7 @@ class GPXAnalysisBuilder
 
                     if (d != 0) 
                     {
-                        let weight = personData.weight + personData.additionalWeight; /* [kg] */
+                        let weight = userData.weight + userData.additionalWeight; /* [kg] */
                         let v = d / Δt;                       /* [m/s] */
                         let ii = gradient(d, Δh);             /* [%] */
                         let ee = expendedEnergyHiking(v, ii); /* Energy expenditure [(w/kg)/h] */
@@ -227,16 +230,18 @@ class GPXAnalysisBuilder
 }
 
 
+
 /*
  * Base Class
  */
 class GPXAnalysis
 {
-    constructor()
+    constructor(title)
     {
+        this.title = title;
         this.dataBinding = {};
         this.resetData = () => { }
-        this.analyzeTransition = (p1, p2) => { }
+        this.analyzeTransition = (p1, p2, index, userData) => { }
         this.finalize = () => { }
     }
     
@@ -244,22 +249,22 @@ class GPXAnalysis
 
 class GPXSumAnalysis extends GPXAnalysis
 {
-    constructor(bindingName, transitionFunction)
+    constructor(bindingName, transitionFunction, finalizerFunction = (v) => { return v.toFixed(2); })
     {
-        super();
+        super(bindingName);
         this.dataBinding[bindingName] = new Observable(0);
 
         this.resetData = () => 
         { 
             this.temp = 0; 
         }
-        this.analyzeTransition = (p1, p2) => 
+        this.analyzeTransition = (p1, p2, index, userData) => 
         { 
-            this.temp += transitionFunction.call(this, p1, p2); 
+            this.temp += transitionFunction.call(this, p1, p2, index, userData); 
         }
         this.finalize = () => 
         { 
-            this.dataBinding[bindingName].value = this.temp.toFixed(2); 
+            this.dataBinding[bindingName].value = finalizerFunction.call(this, this.temp); 
         }
     }
 }
@@ -268,25 +273,25 @@ class GPXMinMaxAverageAnalysis extends GPXAnalysis
 {
     constructor(bindingName, transitionFunction)
     {
-        super();
+        super(bindingName);
         this.dataBinding[`${bindingName}Max`] = new Observable(0);
         this.dataBinding[`${bindingName}Min`] = new Observable(0);
         this.dataBinding[`${bindingName}Avg`] = new Observable(0);
         this[`${bindingName}MaxTemp`];
         this[`${bindingName}MinTemp`];
         this[`${bindingName}AvgTemp`];
-
-        this.graph = [];
-
+        this.graph;
+        
         this.resetData = () => 
         {
             this[`${bindingName}MaxTemp`] = Number.NEGATIVE_INFINITY;
             this[`${bindingName}MinTemp`] = Number.POSITIVE_INFINITY;
             this[`${bindingName}AvgTemp`] = 0;
+            this.graph = [];
         }
-        this.analyzeTransition = (p1, p2, i) => 
+        this.analyzeTransition = (p1, p2, index, userData) => 
         {
-            let value = transitionFunction.call(this, p1, p2); 
+            let value = transitionFunction.call(this, p1, p2, index, userData); 
             if (value != null)
             {
                 if (value > this[`${bindingName}MaxTemp`]) this[`${bindingName}MaxTemp`] = value;
@@ -294,7 +299,7 @@ class GPXMinMaxAverageAnalysis extends GPXAnalysis
                 this[`${bindingName}AvgTemp`] += value;
 
                 /* Fallback to index if no time attribute is available */
-                let x = p1.attributes.time ? p1.attributes.time : i;
+                let x = p2.attributes.time ? p2.attributes.time : index;
                 this.graph.push({ y: value, x: x });
             }        
         }
@@ -312,7 +317,7 @@ class GPXMinMaxGainLossAnalysis extends GPXAnalysis
 {
     constructor(bindingName, attribute)
     {
-        super();
+        super(bindingName);
         this.dataBinding[`${bindingName}Max`] = new Observable(0);
         this.dataBinding[`${bindingName}Min`] = new Observable(0);
         this.dataBinding[`${bindingName}Gain`] = new Observable(0);
@@ -321,27 +326,37 @@ class GPXMinMaxGainLossAnalysis extends GPXAnalysis
         this[`${bindingName}MinTemp`];
         this[`${bindingName}GainTemp`];
         this[`${bindingName}LossTemp`];
-
-        this.graph = [];
-
+        this.graph;
+        
         this.resetData = () =>
         {
             this[`${bindingName}MaxTemp`]  = Number.NEGATIVE_INFINITY;
             this[`${bindingName}MinTemp`]  = Number.POSITIVE_INFINITY;
             this[`${bindingName}GainTemp`] = 0;
             this[`${bindingName}LossTemp`] = 0;
+            this.graph = [];
         }
-        this.analyzeTransition = (p1, p2, i) =>
+        this.analyzeTransition = (p1, p2, index, userData) =>
         {
             if (p1.attributes[attribute] > this[`${bindingName}MaxTemp`]) this[`${bindingName}MaxTemp`] = p1.attributes[attribute];
             if (p1.attributes[attribute] < this[`${bindingName}MinTemp`]) this[`${bindingName}MinTemp`] = p1.attributes[attribute];
+            
             let Δ = p2.attributes[attribute] - p1.attributes[attribute];
             if (Δ > 0) this[`${bindingName}GainTemp`] += Δ;
             if (Δ < 0) this[`${bindingName}LossTemp`] += Δ;
             
             /* Fallback to index if no time attribute is available */
-            let x = p1.attributes.time ? p1.attributes.time : i;
-            this.graph.push({ y: p1.attributes[attribute], x: x });
+            let x = p2.attributes.time ? p2.attributes.time : index;
+            let y = p2.attributes[attribute];
+
+            /* Also add the first datapoint */
+            if (!index)
+            {
+                let x0 = p1.attributes.time ? p1.attributes.time : index;
+                this.graph.push({ y: p1.attributes[attribute], x: x0});
+            }
+
+            this.graph.push({ y: y, x: x });
         }
         this.finalize = () =>
         { 
@@ -371,4 +386,20 @@ const expendedEnergyHiking = (v, i) =>
     return 1.44 + 1.94 * Math.pow(v, 0.43) +
                   0.24 * Math.pow(v, 4) +
                   0.34 * v * i * (1 - Math.pow(1.05, 1 - Math.pow(1.11, i + 32)));
+}
+
+const secondsToDurationString = (secondsString) => 
+{
+    let ms = (secondsString % 1).toFixed(3).substring(2);
+
+    secondsString = parseInt(secondsString.toFixed(), 10);
+
+    let hours = Math.floor(secondsString / 3600);
+    let minutes = Math.floor((secondsString - (hours * 3600)) / 60);
+    let seconds = secondsString - (hours * 3600) - (minutes * 60);
+
+    if (minutes < 10) minutes = `0${minutes}`;
+    if (seconds < 10) seconds = `0${seconds}`;
+
+    return `${hours}:${minutes}:${seconds}.${ms}`
 }

@@ -18,10 +18,6 @@ const testGpxString2 = `<?xml version="1.0" encoding="UTF-8"?>
     <number>0</number>
     <trkseg>
       <trkpt lat="46.732647445190" lon="7.732191733146">
-        <ele>1090.747000000000</ele>
-        <time>2015-10-24T07:47:29Z</time>
-      </trkpt>
-      <trkpt lat="46.732647445190" lon="7.732191733146">
         <ele>1090.656000000000</ele>
         <time>2015-10-24T07:47:38Z</time>
       </trkpt>
@@ -32,6 +28,18 @@ const testGpxString2 = `<?xml version="1.0" encoding="UTF-8"?>
       <trkpt lat="46.732709807223" lon="7.732427566303">
         <ele>1089.191000000000</ele>
         <time>2015-10-24T07:47:58Z</time>
+      </trkpt>
+      <trkpt lat="46.732709807223" lon="7.732427566303">
+        <ele>1088.086000000000</ele>
+        <time>2015-10-24T07:48:08Z</time>
+      </trkpt>
+      <trkpt lat="46.732709807223" lon="7.732427566303">
+        <ele>1087.096000000000</ele>
+        <time>2015-10-24T07:48:10Z</time>
+      </trkpt>
+      <trkpt lat="46.732664291251" lon="7.732636646220">
+        <ele>1086.824000000000</ele>
+        <time>2015-10-24T07:48:30Z</time>
       </trkpt>
     </trkseg>
   </trk>

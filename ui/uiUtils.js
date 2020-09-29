@@ -46,13 +46,14 @@ class UIModal
 
 class UIDataset
 {
+    #_dataResolution = 60;
+
     constructor(title, unit, rawData)
     {
         this._title = title;
         this._unit = unit;
 
         this._rawData = rawData;
-        this._dataResolution = 60;
 
         this._yAxisId = `${this._title.replace(/\s/g, '')}_yID`;
         this._xAxisId = `${this._title.replace(/\s/g, '')}_xID`;
@@ -84,7 +85,8 @@ class UIDataset
         /*
          * ChartJS Properties 
          */
-        this.label = `${this._title} ${this._unit}`;
+        this.borderColor = '#fafafa'
+        this.label = '';
         this.yAxisID = this._yAxisId;
         this.xAxisID = this._xAxisId;
         this.showLine = true;
@@ -92,13 +94,17 @@ class UIDataset
         this.data = [];
     }
 
-    set dataResolution(val)  { this._dataResolution = val;  this._setData(); }
-    get dataResolution() { return this._dataResolution; }
+    set dataResolution(val)  { this.#_dataResolution = val;  this._setData(); }
+    get dataResolution() { return this.#_dataResolution; }
 
     _setData = () =>
     {
-        if (this._dataResolution > this._rawData.length) this._dataResolution = this._rawData.length;
-        else this.label = `Avg. ${this._title} ${this._unit}`;
+        if (this.#_dataResolution >= this._rawData.length) 
+        {
+            this.#_dataResolution = 1;
+            this.label = `${this._title} (${this._unit})`
+        }
+        else this.label = `Avg. ${this._title} (${this._unit})`;
 
         this.data = []
 
@@ -110,9 +116,9 @@ class UIDataset
             avgData += this._rawData[i - 1].y;
             avgDate += this._rawData[i - 1].x.getTime();
 
-            if ( i % this._dataResolution == 0 )
+            if ( i % this.#_dataResolution == 0 )
             {
-                this.data.push({ y: avgData / this._dataResolution, x: new Date(avgDate / this._dataResolution) });
+                this.data.push({ y: (avgData / this.#_dataResolution).toFixed(3), x: new Date(avgDate / this.#_dataResolution) });
                 avgData = 0;
                 avgDate = 0;
             }
@@ -121,8 +127,8 @@ class UIDataset
         /* Add rest if there is any */
         if ( avgData != 0 ) 
         {
-            let rest = this._rawData.length - (this.dataResolution * Math.floor(this._rawData.length / this._dataResolution));
-            this.data.push({ y: avgData / rest, x: new Date(avgDate / rest) });
+            let rest = this._rawData.length - (this.dataResolution * Math.floor(this._rawData.length / this.#_dataResolution));
+            this.data.push({ y: (avgData / rest).toFixed(3), x: new Date(avgDate / rest) });
         }
     }
 }
@@ -145,9 +151,12 @@ const waitListener = (element, listenerName) =>
 
 const createChart = (canvas) =>
 {
+    // https://www.chartjs.org/docs/latest/configuration/
     Chart.defaults.global.defaultFontFamily = "'Abel'";
     Chart.defaults.global.defaultFontColor = "#fff";
     Chart.defaults.scale.gridLines.drawOnChartArea = false;
+    // Chart.defaults.global.datasets.borderColor = '#fff'
+    Chart.defaults.global.defaultColor = 'rgba(0,0,0,0.1)'; /* https://www.chartjs.org/docs/latest/general/colors.html */
     /*
      * Chart JS properties
      */
@@ -210,6 +219,19 @@ const createChart = (canvas) =>
     return chart;
 }
 
+
+/* Currently unused */
+/* Generated with https://learnui.design/tools/data-color-picker.html */
+// const colorPalette = [
+//     RGBAColor.fromHEX('#ffa600'),
+//     RGBAColor.fromHEX('#ff7c43'),
+//     RGBAColor.fromHEX('#f95d6a'),
+//     RGBAColor.fromHEX('#d45087'),
+//     RGBAColor.fromHEX('#a05195'),
+//     RGBAColor.fromHEX('#665191'),
+//     RGBAColor.fromHEX('#2f4b7c'),
+//     RGBAColor.fromHEX('#003f5c')
+// ];
 
 
 class RGBAColor
