@@ -64,7 +64,7 @@
     color: #202020;
 }
 
-#modalBtn, #modalSelect
+#modalBtn, #modalSelect, #modalFileSelectLabel
 {
     color:inherit;
     font-family:inherit;
@@ -77,12 +77,15 @@
     transition: all 0.2s;
 }
 
+#modalFileSelect { display: none; }
+
+
 #modalBtn:last-child 
 {
     margin: 0;
 }
 
-#modalBtn:hover, #modalSelect:hover
+#modalBtn:hover, #modalSelect:hover, #modalFileSelectLabel:hover
 {
     box-shadow: 0.4rem 0.4rem 0 black;
     transform: translate(-0.4rem, -0.4rem);

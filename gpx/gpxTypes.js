@@ -209,23 +209,6 @@ class GPXParentType extends GPXType
         this.visualizer = null;
     }
 
-    
-    get getDistance()
-    {
-        let d = 0;
-
-        if (this.content.every(o => o instanceof GPXParentType))
-        {
-            this.content.forEach(e => d += e.getDistance);
-        }
-        else
-        {
-            for (let i = 0; i < this.content.length - 1; i++) d += this.content[i].haverSine(this.content[i + 1]);
-        }
-
-        return d;
-    }
-
     getExtrema = (attr) =>
     {
         let r = {};

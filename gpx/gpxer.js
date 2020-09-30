@@ -17,7 +17,6 @@ class gpxer
             additionalWeight: 3 /* [kg] */
         };
 
-
         /* Setup Header widget */
         this.widgets = [new UIAppInfoWidget(UIWC, '')];
         

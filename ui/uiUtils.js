@@ -5,20 +5,62 @@ class UIModal
         /* Get relevant UI Elements */
         this.uiModalOverlayDiv = document.getElementById('modalOverlay');
         this.uiModalSelect = document.getElementById('modalSelect');
+        this.uiModalFileSelect = document.getElementById('modalFileSelect');
+        this.uiModalFileSelectLabel = document.getElementById('modalFileSelectLabel');
         this.uiModalMessage = document.getElementById('modalMessage');
         this.uiModalOptions = document.getElementById('modalOptions');
-        this.uiModalAccept = document.getElementById('modalBtn');    
-
-        /* Properties */
-        this.dataBindings = {};
+        this.uiModalAccept = document.getElementById('modalBtn');
 
         /* Show modal */
-        this.uiModalMessage.innerHTML = "Processing GPX...";
+        this.uiModalMessage.innerHTML = '';
         this.uiModalOptions.style.display = 'none';
+    }
+
+
+    awaitUserFile = async() =>
+    {
+        /* Show modal content */
+        this.uiModalFileSelectLabel.innerHTML = `Please select a gpx file.`
+        this.uiModalOptions.style.display = 'flex';
+        this.uiModalSelect.style.display = 'none';
+        this.uiModalFileSelectLabel.style.display = 'block';
+
+        /* Wait until user accepts */
+        while (true)
+        {
+            await waitListener(this.uiModalAccept, 'click');
+
+            if (this.uiModalFileSelect.files.length == 0)
+            {
+                GPXConverter.e(`please select a file!`);
+            }
+            else if (!/\.(gpx)$/i.test(this.uiModalFileSelect.files[0].name))
+            {
+                GPXConverter.e(`file of type '.gpx' expected!`);
+            }
+            else
+            {
+                return await this.#readFile(this.uiModalFileSelect.files[0]);
+            }
+        }
+
+    }
+
+    #readFile(file)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            var fr = new FileReader();
+            fr.onload = () => {
+                resolve(fr.result)
+            };
+            fr.readAsText(file);
+        });
     }
 
     awaitUserChoice = async(gpxInfo, options) =>
     {
+        /* Create and append dropdown options */
         options.forEach((option, i) =>
         {
             let optionElement = document.createElement('option');
@@ -30,12 +72,16 @@ class UIModal
         /* Show modal content */
         this.uiModalMessage.innerHTML = `Loaded ${gpxInfo} <br>Please select the desired Tour.`
         this.uiModalOptions.style.display = 'flex';
+        this.uiModalSelect.style.display = 'block';
+        this.uiModalFileSelectLabel.style.display = 'none';
 
+
+        /* Wait until user accepts */
         await waitListener(this.uiModalAccept, 'click');
 
         /* Hide modal */
         this.uiModalOverlayDiv.style.display = 'none';
-        
+
         let selectedOption = options.find(o => o.tag == this.uiModalSelect.options[this.uiModalSelect.selectedIndex].value);
 
         return Promise.resolve(selectedOption.tour);
@@ -81,9 +127,9 @@ class UIDataset
             time: { unit: 'minute' },
             gridLines: { display: false }
         };
-        
+
         /*
-         * ChartJS Properties 
+         * ChartJS Properties
          */
         this.borderColor = '#fafafa'
         this.label = '';
@@ -99,7 +145,7 @@ class UIDataset
 
     _setData = () =>
     {
-        if (this.#_dataResolution >= this._rawData.length) 
+        if (this.#_dataResolution >= this._rawData.length)
         {
             this.#_dataResolution = 1;
             this.label = `${this._title} (${this._unit})`
@@ -110,7 +156,7 @@ class UIDataset
 
         let avgData = 0;
         let avgDate = 0;
-        
+
         for ( let i = 1; i <= this._rawData.length; i++)
         {
             avgData += this._rawData[i - 1].y;
@@ -125,7 +171,7 @@ class UIDataset
         }
 
         /* Add rest if there is any */
-        if ( avgData != 0 ) 
+        if ( avgData != 0 )
         {
             let rest = this._rawData.length - (this.dataResolution * Math.floor(this._rawData.length / this.#_dataResolution));
             this.data.push({ y: (avgData / rest).toFixed(3), x: new Date(avgDate / rest) });
@@ -136,11 +182,11 @@ class UIDataset
 
 const waitListener = (element, listenerName) =>
 {
-    return new Promise(function (resolve, reject) 
+    return new Promise(function (resolve, reject)
     {
-        var listener = event => 
+        var listener = event =>
         {
-            try { element.removeEventListener(listenerName, listener); } 
+            try { element.removeEventListener(listenerName, listener); }
             catch (error) { }
             resolve(event);
         };
@@ -173,7 +219,7 @@ const createChart = (canvas) =>
             },
             legend:
             {
-                onClick: function (e, legendItem) 
+                onClick: function (e, legendItem)
                 {
                     let meta = this.chart.getDatasetMeta(legendItem.datasetIndex);
                     let yAxis = this.chart.options.scales.yAxes.find(axis => axis.id == meta.yAxisID);
@@ -193,12 +239,12 @@ const createChart = (canvas) =>
     /* Extend ChartJS object */
     chart._addDatasets = (datasets) =>
     {
-        if (!datasets) GPXConverter.t(`expected 'GPXChartDataset', but received 'undefined'!`); 
-        else if (!(datasets.every(o => o instanceof UIDataset))) GPXConverter.t(`not every item in 'ds' is of type 'GPXAnalysisDataset'!`); 
+        if (!datasets) GPXConverter.t(`expected 'GPXChartDataset', but received 'undefined'!`);
+        else if (!(datasets.every(o => o instanceof UIDataset))) GPXConverter.t(`not every item in 'ds' is of type 'GPXAnalysisDataset'!`);
         else
         {
             datasets.forEach((ds, i) =>
-            {                    
+            {
                 ds._setData();
                 chart.data.datasets.push(ds);
                 if (i == 0) ds._xAxisScalesOptions.display = true;

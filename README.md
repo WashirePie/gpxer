@@ -2,7 +2,7 @@
 
 **[WIP]**
 
-Get useful data from gpx files and have them nicely presented.
+Get useful hiking-related data from gpx files and have it nicely presented.
 
 > Written in pure, ES6 JavaScript.
 

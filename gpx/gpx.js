@@ -26,13 +26,21 @@ class GPX
         if (this.hasOwnProperty('routes')) 
             this.routes.forEach((route, i) => 
             { 
-                list.push({ tag: `Route ${i}, (${(route.getDistance / 1000).toFixed(2)}km)`, tour: route }) 
+                let tag = 'Route ';
+                tag += route.attributes?.name ? `'${route.attributes.name}'` : `[#${i}]`;
+                tag += ` (${route.content.length} points)`
+                list.push({ tag: tag, tour: route }) 
             });
 
         if (this.hasOwnProperty('tracks')) 
             this.tracks.forEach((track, i) => 
             { 
-                list.push({ tag: `Track ${i}, (${(track.getDistance / 1000).toFixed(2)}km)`, tour: track }) 
+                let tag = 'Track ';
+                let ptCount = 0;
+                tag += track.attributes?.name ? `'${track.attributes.name}'` : `[#${i}]`;
+                track.content.forEach(seg => {ptCount += seg.content.length;});
+                tag += ` (${track.content.length} segments, ${ptCount} points)`;
+                list.push({ tag: tag, tour: track }) 
             });
 
         return list;
