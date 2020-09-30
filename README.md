@@ -1,11 +1,15 @@
 # gpxer
 
-Turn gpx strings into JS objects.
-Written in pure, ES6 JavaScript. [p5.js](https://p5js.org/) was used for some minor visualizing tasks.
+**[WIP]**
+
+Get useful data from gpx files and have them nicely presented.
+
+> Written in pure, ES6 JavaScript.
 
 
-## General GPX Structure
+## [Some insights on the GPX file Structure](#gpx-structure)
 
+A gpx file is essentially a xml file which is structured to fit a specified [xsl schema](https://www.topografix.com/GPX/1/1/gpx.xsd)
 ```xml
   <gpx ...attribs>
       params
@@ -23,78 +27,32 @@ Written in pure, ES6 JavaScript. [p5.js](https://p5js.org/) was used for some mi
         params
         <trkpt ...attribs>
           params
- ```
-Checkout [this xsl schema](https://www.topografix.com/GPX/1/1/gpx.xsd) for a detailed ruleset.
-These rules were applied in the following class (type) definitions.
-At this point in time, the actual types of parameters (string, int etc.) is not handled.
+```
 
-That's something for future me to resolve.
-
-
-
-## App Structure 
-
-### [Main Types](#main-types)
-
-The main gpx elements
+To define some terms for the context of this app, the following are considered 'parent types'
 ```xml
 <gpx>, <metadata>, <wpt>, <rte>, <rtept>, <trk>, <trkseg>, <trkpt> 
 ```
-are converted to objects of
-```js
-    /* Base classes */
-    class GPXType { ... }
-    class GPXParentType extends GPXType { ... }
-    class GPXSurfaceType extends GPXType { ... }
 
-    /* Types */
-    class GPXMetadata extends GPXType { ... }
-    class GPXHead extends GPXParentType {... }
-    class GPXTrack extends GPXParentType { ... }
-    class GPXTrackSegment extends GPXParentType { ... }
-    class GPXRoute extends GPXParentType { ... }
-    class GPXRoutePoint extends GPXSurfaceType { }
-    class GPXWaypoint extends GPXSurfaceType   { }
-    class GPXTrackPoint extends GPXSurfaceType { }
-```
-Each Type contains a `GPXValidator` object, which is used
-to validate the type.
-
-
-### Params
-
-### **[Deprecated]**
-*As of now, params will be converted into properties in the `GPXAttributes` object property*
-
-Secondary elements, which are standalone elements (in that they cannot contain any child elements ) such as: 
+Next up 'param types' which must be wrapped by one of the parent types. There are - of course - some limitations, not all parent types
+can contain any param type, this is handled in the xsl schema and also loosely implemented in this app.
 ```xml
 <ele>4107.1</ele>
 <cmt>Comment</cmt>
 <magvar>0.12</magvar>
 ...
 ```
-are converted to objects of
-```js
-    /* Base class */
-    class GPXParam { ... }
 
-    /* Types */
-    class GPXElevationParam extends GPXParam { ... }
-    class GPXTimeParam extends GPXParam { ... }
-    class GPXGeoIDHeightParam extends GPXParam { ... }
-    class GPXNameParam extends GPXParam { ... }
-    ...
-```
-
-
-### Attributes
-
-Now, an XML element can contain attributes next to the `tagName`: 
+Finally, there are attributes for either the parent or param types. There are also limitations to which type can have which attributes.
 ```xml
 <rtept lat="67.57"...
-``` 
-Such attributes are converted to an object of 
-```js
-    class GPXAttributes { ... }
 ```
-This object is added as a property to the [Main Types](#main-types)
+
+Since the gpx format is extensible, it's almost impossible to handle all types. The general params are handled tough.
+
+
+
+
+## App Structure 🔨
+
+todo...
