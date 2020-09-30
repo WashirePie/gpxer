@@ -1,35 +1,43 @@
 /*
- * TODO: UI: Add time/duratio widget
- * TODO: UI: Add peak power widget
- * TODO: UI: Add peak pace widget
- * TODO: UI: Add highest / lowest point widget
- * TODO: UI: Refactor average power widget -> Display in watts
- * TODO: UI: Refactor average Slope widget, that is kinda uselsess
- * TODO: UI: Add cmt, name, desc in trkpt or rtept to chart tags
- * TODO: Handle Waypoints 
- * TODO: Chart: Make x axis ticks in seconds, only where the datapoints are
- * TODO: Refactor GPXConverter.e -> Make a static error Class that also evaluates stack traces
- * TODO: Refactor GPXParams -> Still necessary?
+ * TODO: ✅ Bugs: Fix chart updating 
+ *
+ * TODO: ⬜ Test: Test with gpx which only contains 'ele' attribs
+ * TODO: ⬜ Test: Test with gpx which only contains 'ele', 'lat', 'lon' attribs
+ * TODO: ⬜ Test: Test with gpx whoch has a track
+ * TODO: ⬜ Test: from v1.0.0: Setup unit tests
+ *
+ * TODO: ⬜ Doc: Add jsDoc comments to all classes
+ *                Explain extendability with GPXAnalysis class (transitionFunction, finalizerFunction)
+ *
+ * TODO: ⬜ UI: Add cmt, name, desc in trkpt or rtept to chart tags
+ * TODO: ⬜ UI: Add css value count-up animation
+ * 
+ * TODO: ⬜ General: Make analysisFinalizer an optional property (for all Analyzers!)
+ * TODO: ⬜ General: Handle Waypoints 
+ * TODO: ⬜ General: Rework GPXBuilder ---> use a static method in GPXParam to check for attributes. Get rid of the Switch statement!
+ * 
+ * TODO: ⬜ Refactor GPXConverter.e -> Make a static error Class that also evaluates stack traces
+ * TODO: ⬜ Refactor GPXParams -> Still necessary?
  */
 
 let gpx = null;
 let gpxv = null;
 let ui = null;
 
+const UIWC = document.getElementById('widgetContainer');
 
 let main = async() =>
 {
-    ui   = new UIController();
+    ui   = new UIModal();
     gpx  = GPXConverter.parse(testGpxString2);
-    gpxv = new GPXView(await ui.awaitUserChoice('GPX', gpx.getTourList()));
+    gpxv = new gpxer(await ui.awaitUserChoice('GPX', gpx.getTourList()));
 
-    let dataBindings = [
-        {appVersion: new Observable('v0.0.0 (beta)')},
-        {appTitle: new Observable('gpxer')}
-    ];
-    
-    dataBindings = dataBindings.concat(gpxv.analysisData);
-    ui.applyExternalDataBindings(dataBindings);
+    /* Add dat.GUI Controls */
+    let gui = new dat.GUI();
+
+    let pf = gui.addFolder('Analysis Parameters');
+    pf.add(gpxv.userData, 'weight', 30, 150, 0.5).onFinishChange(() =>          { gpxv.executeCapabilities(); });
+    pf.add(gpxv.userData, 'additionalWeight', 0, 100, 0.5).onFinishChange(() => { gpxv.executeCapabilities(); });
 }
 
 setTimeout(main, 0);
