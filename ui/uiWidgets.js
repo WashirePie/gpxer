@@ -34,8 +34,21 @@ class UIAppInfoWidget extends UIWidget
         this.p.className = 'version';
         this.p.setAttribute('data-bind', 'appVersion');
 
+        this.select = document.createElement('select');
+        this.select.className = 'tour-selector'
+        this.select.setAttribute('data-bind', 'selectedTour');
+
         this.element.appendChild(this.h1);
         this.element.appendChild(this.p);
+        this.element.appendChild(this.select);
+    }
+
+    addOption = (name) =>
+    {
+        let optionElement = document.createElement('option');
+        optionElement.innerHTML = name;
+        optionElement.value = name;
+        this.select.appendChild(optionElement);
     }
 }
 

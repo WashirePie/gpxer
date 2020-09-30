@@ -47,6 +47,12 @@ body
     display: inline;
 }
 
+.tour-selector
+{
+    display: inline;
+    margin-left: 1rem;
+}
+
 .widget-title
 {
     margin-bottom: 1rem;

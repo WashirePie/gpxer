@@ -32,9 +32,7 @@ let main = async() =>
     ui   = new UIModal();
     
     let raw = await ui.awaitUserFile();    
-    gpx  = GPXConverter.parse(raw);
-    console.log(gpx);
-    gpxv = new gpxer(await ui.awaitUserChoice('GPX', gpx.getTourList()));
+    gpxv = new gpxer(raw);
 
     /* Add dat.GUI Controls */
     let gui = new dat.GUI();

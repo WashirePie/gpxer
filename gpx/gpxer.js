@@ -1,15 +1,8 @@
 class gpxer
 {
-    constructor(tour)
+    constructor(raw)
     {
-        GPXType.typeCheck(tour, ['GPXRoute', 'GPXTrack'], []);
-
-        /* Retrieve GPXSurfaceType points from content */
-        this.points = [];
-        if (tour instanceof GPXRoute) this.points = tour.content;
-        else tour.content.forEach(seg => this.points = this.points.concat(seg.content));
-
-        this.bounds = Object.assign(tour.getExtrema('ele'), tour.getExtrema('time'), tour.getExtrema('lat'), tour.getExtrema('lon'));
+        this.gpx = GPXConverter.parse(raw);
 
         this.userData = 
         {
@@ -17,22 +10,57 @@ class gpxer
             additionalWeight: 3 /* [kg] */
         };
 
-        /* Setup Header widget */
-        this.widgets = [new UIAppInfoWidget(UIWC, '')];
+        this.dataBindings =
+        {
+            appVersion: new Observable('v0.0.0 (beta)'),
+            appTitle: new Observable('gpxer'),
+            selectedTour: new Observable('null')
+        };
+
+        this.dataBindings.selectedTour.subscribe((v) => 
+        { 
+            // TODO: Find a way to reference the current gpxer instance instead of the global variable 'gpxv'!
+            gpxv.selectedTour = gpxv.availableTours.find(t => t.tag == v).tour; 
+        });
         
+        this.availableTours = this.gpx.getTourList();
+        this.currentAnalysis = this.availableTours[0].tour;
+
+        /* Setup Header widget */
+        let head = new UIAppInfoWidget(UIWC, '');
+        let tours = this.gpx.getTourList();
+        this.availableTours.forEach(tour => { head.addOption(tour.tag); });
+
+        this.widgets = [head];
+
+        this.switchTour();
+    }
+
+    set selectedTour (tour) { this.currentAnalysis = tour; this.switchTour(this.currentAnalysis); }
+    get selectedTour ()     { return this.currentAnalysis; }
+
+    switchTour = () =>
+    {
+        console.log(this.currentAnalysis);
+        GPXType.typeCheck(this.currentAnalysis, ['GPXRoute', 'GPXTrack'], []);
+        /* Retrieve GPXSurfaceType points from content */
+        this.points = [];
+        if (this.currentAnalysis instanceof GPXRoute) this.points = this.currentAnalysis.content;
+        else this.currentAnalysis.content.forEach(seg => this.points = this.points.concat(seg.content));
+
+        this.bounds = Object.assign(this.currentAnalysis.getExtrema('ele'), 
+                                    this.currentAnalysis.getExtrema('time'), 
+                                    this.currentAnalysis.getExtrema('lat'), 
+                                    this.currentAnalysis.getExtrema('lon'));
+
         /* Retrieve capabilities */
         let capabilities = GPXAnalysisBuilder.build(this.points)
 
         this.analyzers = capabilities.analyzers;
-        this.datasets =  capabilities.datasets;
-        this.widgets =   this.widgets.concat(capabilities.widgets);
+        this.datasets = capabilities.datasets;
+        this.widgets = this.widgets.concat(capabilities.widgets);
 
         /* Get and apply dataBindings */
-        this.dataBindings =
-        {
-            appVersion: new Observable('v0.0.0 (beta)'),
-            appTitle: new Observable('gpxer')
-        };
         this.analyzers.forEach(a => { if (a.dataBinding) Object.assign(this.dataBindings, a.dataBinding); });
         this.applyDataBindings();
 
@@ -80,10 +108,17 @@ class gpxer
         document.querySelectorAll('[data-bind]').forEach(e => 
         {
             const obs = this.dataBindings[e.getAttribute('data-bind')];
-
-            /* Currently, only Input elements support two-way bindings */
-            if (e.tagName.toLocaleLowerCase == 'input') bindValue(e, obs);
-            else bindInnerHTML(e, obs);
+            if (!obs) 
+            {
+                GPXConverter.w(`unused databinding in DOM: '${e.getAttribute('data-bind')}'`);
+                console.warn(e);
+            }
+            else
+            {
+                if (e.tagName.toLocaleLowerCase() == 'input') bindValue(e, obs); /* Two-way binding */
+                else if (e.tagName.toLocaleLowerCase() == 'select') bindSelectValue(e, obs); /* One-way (DOM->JS) */
+                else bindInnerHTML(e, obs); /* One-way (JS->DOM) */
+            }
         });
     }
 }

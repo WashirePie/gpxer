@@ -9,18 +9,18 @@ class UIModal
         this.uiModalFileSelectLabel = document.getElementById('modalFileSelectLabel');
         this.uiModalMessage = document.getElementById('modalMessage');
         this.uiModalOptions = document.getElementById('modalOptions');
-        this.uiModalAccept = document.getElementById('modalBtn');
 
         /* Show modal */
-        this.uiModalMessage.innerHTML = '';
         this.uiModalOptions.style.display = 'none';
     }
 
 
     awaitUserFile = async() =>
     {
+        this.uiModalFileSelectLabel.innerHTML = `Browse...`
+        this.uiModalMessage.innerHTML = 'Select a valid .gpx file';
+
         /* Show modal content */
-        this.uiModalFileSelectLabel.innerHTML = `Please select a gpx file.`
         this.uiModalOptions.style.display = 'flex';
         this.uiModalSelect.style.display = 'none';
         this.uiModalFileSelectLabel.style.display = 'block';
@@ -28,22 +28,21 @@ class UIModal
         /* Wait until user accepts */
         while (true)
         {
-            await waitListener(this.uiModalAccept, 'click');
-
-            if (this.uiModalFileSelect.files.length == 0)
-            {
-                GPXConverter.e(`please select a file!`);
-            }
-            else if (!/\.(gpx)$/i.test(this.uiModalFileSelect.files[0].name))
+            await waitListener(this.uiModalFileSelect, 'change');
+        
+            if (!/\.(gpx)$/i.test(this.uiModalFileSelect.files[0]?.name))
             {
                 GPXConverter.e(`file of type '.gpx' expected!`);
             }
             else
             {
+                /* Hide modal */
+                this.uiModalOverlayDiv.style.display = 'none';
+    
                 return await this.#readFile(this.uiModalFileSelect.files[0]);
             }
         }
-
+            
     }
 
     #readFile(file)
@@ -57,36 +56,6 @@ class UIModal
             fr.readAsText(file);
         });
     }
-
-    awaitUserChoice = async(gpxInfo, options) =>
-    {
-        /* Create and append dropdown options */
-        options.forEach((option, i) =>
-        {
-            let optionElement = document.createElement('option');
-            optionElement.innerHTML = option.tag;
-            optionElement.value = option.tag;
-            this.uiModalSelect.appendChild(optionElement);
-        });
-
-        /* Show modal content */
-        this.uiModalMessage.innerHTML = `Loaded ${gpxInfo} <br>Please select the desired Tour.`
-        this.uiModalOptions.style.display = 'flex';
-        this.uiModalSelect.style.display = 'block';
-        this.uiModalFileSelectLabel.style.display = 'none';
-
-
-        /* Wait until user accepts */
-        await waitListener(this.uiModalAccept, 'click');
-
-        /* Hide modal */
-        this.uiModalOverlayDiv.style.display = 'none';
-
-        let selectedOption = options.find(o => o.tag == this.uiModalSelect.options[this.uiModalSelect.selectedIndex].value);
-
-        return Promise.resolve(selectedOption.tour);
-    }
-
 }
 
 

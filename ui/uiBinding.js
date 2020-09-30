@@ -9,8 +9,13 @@ const bindValue = (input, observable) =>
 {
     input.value = observable.value;
     observable.subscribe(() => input.value = observable.value);
-    input.onkeyup = () => observable.value = input.value;
+    input.onkeyup = () =>  observable.value = input.value;
 };
+
+const bindSelectValue = (select, observable) =>
+{
+    select.onchange = () => observable.value = select.value; ;
+}
 
 class Observable 
 {
