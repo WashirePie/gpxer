@@ -1,7 +1,7 @@
 /* 
  * Modal 
  */
-#modalOverlay 
+.modal-overlay 
 {
     position: absolute; 
     top: 0; 
@@ -38,7 +38,14 @@
     to { background-position: -120px 60px; }
 }
 
-#modal 
+@keyframes gradient
+ { 
+    0%   { background-position: 0% 50%; }
+	50%  { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
+
+.modal 
 {
     font-size: 18px;  
     position: absolute;
@@ -56,7 +63,7 @@
     box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
-#modalMessage 
+.modal-message 
 {
     font-size:1.1rem;
     margin-bottom: 1.6rem;
@@ -64,7 +71,7 @@
     color: #202020;
 }
 
-#modalFileSelectLabel
+.modal-file-input-label
 {
     color:inherit;
     font-family:inherit;
@@ -77,25 +84,25 @@
     transition: all 0.2s;
 }
 
-#modalFileSelect { display: none; }
-#modalFileSelectLabel
+.modal-file-input { display: none; }
+.modal-file-input-label
 {
     margin: 0 auto;
 }
 
-#modalFileSelectLabel:hover
+.modal-file-input-label:hover
 {
     box-shadow: 0.4rem 0.4rem 0 black;
     transform: translate(-0.4rem, -0.4rem);
 }
 
-#modalFileSelectLabel:active 
+.modal-file-input-label:active 
 {
     box-shadow: 0 0 0 black;
     transform: translate(0, 0);
 }
 
-#modalOptions
+.modal-options
 {
     display: flex;
     flex-direction: row;

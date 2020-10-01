@@ -61,7 +61,6 @@ class GPXRouteValidator extends GPXValidator
 
 
 /* Applies for wpt, trkpt and rtept */
-/* TODO: ...and eventually for pt, which is currently not implemented */
 class GPXPointValidator extends GPXValidator
 {
     constructor()

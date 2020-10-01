@@ -149,53 +149,53 @@ class GPXType
         delete this.values;
     }
 
-    /* types: Array of allowed types ex.: ['GPXRoute']
-    attributes: ['ele', 'time', 'lat', 'lon'] */
-    static typeCheck = (obj, types, attributes = []) =>
-    {
-        if (!obj) throw `(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's undefined!`;
+    // /* types: Array of allowed types ex.: ['GPXRoute']
+    // attributes: ['ele', 'time', 'lat', 'lon'] */
+    // static typeCheck = (obj, types, attributes = []) =>
+    // {
+    //     if (!obj) throw `(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's undefined!`;
 
-        /* Type Check */
-        if (!types.some(type => obj instanceof eval(type))) GPXConverter.t(`(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's '${obj.constructor.name}'!`);
+    //     /* Type Check */
+    //     if (!types.some(type => obj instanceof eval(type))) GPXConverter.t(`(Type Check): 'obj' must be instance of '${types.join("', '")}', but it's '${obj.constructor.name}'!`);
 
-        /* Check for inconsistent / incomplete GPXSurfaceTypes */
-        if (!obj.hasOwnProperty('content')) 
-        {
-            GPXConverter.t(`(Type Check): Cannot execute attribute-check, 'obj' has no property 'content'!`);
-        }
-        else if ( obj.content.every(o => o.hasOwnProperty('content')) )
-        {
-            attributes.forEach(attribute =>
-            {
-                obj.content.forEach(cobj =>
-                {                    
-                    let inconsitent = cobj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
-                    if (inconsitent.length)
-                    {
-                        GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${cobj.content.length} Points do not contain the attribute '${attribute}'`);
-                        console.warn(inconsitent);
-                        console.warn('Parent Object:');
-                        console.warn(obj);
-                    }
-                });
-            });
-        }
-        else
-        {            
-            attributes.forEach(attribute =>
-            {
-                let inconsitent = obj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
+    //     /* Check for inconsistent / incomplete GPXSurfaceTypes */
+    //     if (!obj.hasOwnProperty('content')) 
+    //     {
+    //         GPXConverter.t(`(Type Check): Cannot execute attribute-check, 'obj' has no property 'content'!`);
+    //     }
+    //     else if ( obj.content.every(o => o.hasOwnProperty('content')) )
+    //     {
+    //         attributes.forEach(attribute =>
+    //         {
+    //             obj.content.forEach(cobj =>
+    //             {                    
+    //                 let inconsitent = cobj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
+    //                 if (inconsitent.length)
+    //                 {
+    //                     GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${cobj.content.length} Points do not contain the attribute '${attribute}'`);
+    //                     console.warn(inconsitent);
+    //                     console.warn('Parent Object:');
+    //                     console.warn(obj);
+    //                 }
+    //             });
+    //         });
+    //     }
+    //     else
+    //     {            
+    //         attributes.forEach(attribute =>
+    //         {
+    //             let inconsitent = obj.content.filter(o => !(o.attributes.hasOwnProperty(attribute)));
 
-                if (inconsitent.length)
-                {
-                    GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${obj.content.length} Points do not contain the attribute '${attribute}'`);
-                    console.warn(inconsitent);
-                }
-            });
-        }
+    //             if (inconsitent.length)
+    //             {
+    //                 GPXConverter.w(`(Type Check): Inconsistent Data! ${inconsitent.length} of ${obj.content.length} Points do not contain the attribute '${attribute}'`);
+    //                 console.warn(inconsitent);
+    //             }
+    //         });
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 }
 
 
@@ -241,6 +241,14 @@ class GPXParentType extends GPXType
         r[`min${propName}`] = min; 
 
         return r;
+    }
+
+    getPoints = () =>
+    {
+        let points = [];
+        if (this instanceof GPXRoute) points = this.content;
+        else this.content.forEach(seg => points = points.concat(seg.content));
+        return points;
     }
 }
 
@@ -345,9 +353,7 @@ class GPXMetadata extends GPXType
 
 
 class GPXRoutePoint extends GPXSurfaceType { }
-
-class GPXWaypoint extends GPXSurfaceType { }
-
+class GPXWaypoint   extends GPXSurfaceType { }
 class GPXTrackPoint extends GPXSurfaceType { }
 
 

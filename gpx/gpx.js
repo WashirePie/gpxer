@@ -23,7 +23,7 @@ class GPX
     {
         let list = [];
 
-        if (this.hasOwnProperty('routes')) 
+        if (this.hasOwnProperty('routes'))
             this.routes.forEach((route, i) => 
             { 
                 let tag = 'Route ';

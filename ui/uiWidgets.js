@@ -18,6 +18,8 @@ class UIWidget
 
         parent.appendChild(this.element);
     }
+
+    remove = () => this.element.parentNode.removeChild(this.element);
 }
 
 class UIAppInfoWidget extends UIWidget
@@ -277,6 +279,169 @@ class UIQuadWidget extends UIWidget
 }
 
 
+
+class UIChartWidgetDataset
+{
+    #_dataResolution = 60;
+
+    constructor(title, unit, rawData)
+    {
+        this._title = title;
+        this._unit = unit;
+
+        this._rawData = rawData;
+
+        this._yAxisId = `${this._title.replace(/\s/g, '')}_yID`;
+        this._xAxisId = `${this._title.replace(/\s/g, '')}_xID`;
+
+        this._yAxisScalesOptions =
+        {
+            id: this._yAxisId,
+            ticks:
+            {
+                display: true,
+                beginAtZero: true,
+                fontColor: this._borderColor
+            },
+            type: 'linear',
+            position: 'left',
+            gridLines: { display: false }
+        };
+
+        this._xAxisScalesOptions =
+        {
+            id: this._xAxisId,
+            display: false,
+            type: 'time',
+            position: 'bottom',
+            time: { unit: 'minute' },
+            gridLines: { display: false }
+        };
+
+        /*
+         * ChartJS Properties
+         */
+        this.borderColor = '#fafafa'
+        this.label = '';
+        this.yAxisID = this._yAxisId;
+        this.xAxisID = this._xAxisId;
+        this.showLine = true;
+        this.fill = true;
+        this.data = [];
+    }
+
+    set dataResolution(val)  { this.#_dataResolution = val;  this._setData(); }
+    get dataResolution() { return this.#_dataResolution; }
+
+    _setData = () =>
+    {
+        if (this.#_dataResolution >= this._rawData.length)
+        {
+            this.#_dataResolution = 1;
+            this.label = `${this._title} (${this._unit})`
+        }
+        else this.label = `Avg. ${this._title} (${this._unit})`;
+
+        this.data = []
+
+        let avgData = 0;
+        let avgDate = 0;
+
+        for ( let i = 1; i <= this._rawData.length; i++)
+        {
+            avgData += this._rawData[i - 1].y;
+            avgDate += this._rawData[i - 1].x.getTime();
+
+            if ( i % this.#_dataResolution == 0 )
+            {
+                this.data.push({ y: (avgData / this.#_dataResolution).toFixed(3), x: new Date(avgDate / this.#_dataResolution) });
+                avgData = 0;
+                avgDate = 0;
+            }
+        }
+
+        /* Add rest if there is any */
+        if ( avgData != 0 )
+        {
+            let rest = this._rawData.length - (this.dataResolution * Math.floor(this._rawData.length / this.#_dataResolution));
+            this.data.push({ y: (avgData / rest).toFixed(3), x: new Date(avgDate / rest) });
+        }
+    }
+}
+
+
+
+const createChart = (canvas) =>
+{
+    // https://www.chartjs.org/docs/latest/configuration/
+    Chart.defaults.global.defaultFontFamily = "'Abel'";
+    Chart.defaults.global.defaultFontColor = "#fff";
+    Chart.defaults.scale.gridLines.drawOnChartArea = false;
+    // Chart.defaults.global.datasets.borderColor = '#fff'
+    Chart.defaults.global.defaultColor = 'rgba(0,0,0,0.1)'; /* https://www.chartjs.org/docs/latest/general/colors.html */
+    /*
+     * Chart JS properties
+     */
+    let chartTemplate =
+    {
+        type: 'scatter',
+        data: { datasets: [] },
+        options:
+        {
+            scales:
+            {
+                yAxes: [],
+                xAxes: [],
+            },
+            legend:
+            {
+                onClick: function (e, legendItem)
+                {
+                    let meta = this.chart.getDatasetMeta(legendItem.datasetIndex);
+                    let yAxis = this.chart.options.scales.yAxes.find(axis => axis.id == meta.yAxisID);
+
+                    /* Hide Y Axis when dataset gets hidden */
+                    meta.hidden = !meta.hidden;
+                    yAxis.display = !meta.hidden;
+
+                    this.chart.update();
+                }
+            }
+        }
+    }
+
+    let chart = new Chart(canvas, chartTemplate);
+
+    /* Extend ChartJS object */
+    chart._addDatasets = (datasets) =>
+    {
+        if (!datasets) GPXConverter.t(`expected 'GPXChartDataset', but received 'undefined'!`);
+        else if (!(datasets.every(o => o instanceof UIChartWidgetDataset))) GPXConverter.t(`not every item in 'ds' is of type 'GPXAnalysisDataset'!`);
+        else
+        {
+            datasets.forEach((ds, i) =>
+            {
+                ds._setData();
+                chart.data.datasets.push(ds);
+                if (i == 0) ds._xAxisScalesOptions.display = true;
+                chart.options.scales.yAxes.push(ds._yAxisScalesOptions);
+                chart.options.scales.xAxes.push(ds._xAxisScalesOptions);
+            });
+        }
+    }
+
+    chart._removeDatasets = () =>
+    {
+        chart.data.datasets = [];
+        chart.options.scales.yAxes = [];
+        chart.options.scales.xAxes = [];
+        chart.update();
+    }
+
+    return chart;
+}
+
+
 /*
  * Helper functions
  */
@@ -291,6 +456,5 @@ const map = (n, start1, stop1, start2, stop2, withinBounds) =>
   else                return constrain(newval, stop2, start2);
 
 }
-
 
 const constrain = (n, low, high) => { return Math.max(Math.min(n, high), low); }

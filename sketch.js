@@ -30,8 +30,8 @@ const UIWC = document.getElementById('widgetContainer');
 let main = async() =>
 {
     ui   = new UIModal();
-    
-    let raw = await ui.awaitUserFile();    
+    let raw = await ui.awaitUserFile(); 
+       
     gpxv = new gpxer(raw);
 
     /* Add dat.GUI Controls */

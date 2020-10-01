@@ -56,11 +56,10 @@ class GPXAnalysisBuilder
             const unit = 'm';
 
             let a = new GPXMinMaxGainLossAnalysis(bindingName, 'ele');
-            let w = new UITourPlotWidget(UIWC, 'tour plot', 500, 500);
-            let w1 = new UIQuadWidget(UIWC, 'span-1 row-2', bindingName, 'arrow_upward', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Gain`, `${bindingName}Loss`);
-            let ds = new UIDataset(bindingName, unit, a.graph);
+            let w = new UIQuadWidget(UIWC, 'span-1 row-2', bindingName, 'arrow_upward', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Gain`, `${bindingName}Loss`);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
 
-            widgets.push(w, w1);
+            widgets.push(w);
             analyzers.push(a);
             datasets.push(ds);
         }
@@ -82,8 +81,9 @@ class GPXAnalysisBuilder
 
             let a = new GPXSumAnalysis(bindingName, (p1, p2, index, userData) => { return p1.haverSine(p2) / 1000 });
             let w = new UISingleWidget(UIWC, '', `total ${bindingName}`, 'settings_ethernet', 'km', bindingName, '');
+            let w1 = new UITourPlotWidget(UIWC, 'tour plot', 500, 500);
 
-            widgets.push(w)
+            widgets.push(w, w1)
             analyzers.push(a);
         } 
         
@@ -101,7 +101,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
             analyzers.push(a);
@@ -123,7 +123,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'call_made', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
             
             widgets.push(w)
             analyzers.push(a);
@@ -144,7 +144,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'speed', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
             analyzers.push(a);
@@ -181,7 +181,7 @@ class GPXAnalysisBuilder
             );
 
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'power', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
 
             widgets.push(w)
             analyzers.push(a);

@@ -2,6 +2,14 @@ class gpxer
 {
     constructor(raw)
     {
+        this.gpx;
+        this.widgets = [];
+        this.headerWidget = null;
+        this.userData = {};
+        this.dataBindings = {};
+        this.availableTours = [];
+        this.currentAnalysis = null;
+        
         this.gpx = GPXConverter.parse(raw);
 
         this.userData = 
@@ -17,36 +25,33 @@ class gpxer
             selectedTour: new Observable('null')
         };
 
+        /* Subscribe listener to change the current analysis */
         this.dataBindings.selectedTour.subscribe((v) => 
         { 
-            // TODO: Find a way to reference the current gpxer instance instead of the global variable 'gpxv'!
-            gpxv.selectedTour = gpxv.availableTours.find(t => t.tag == v).tour; 
+            this.selectedTour = this.availableTours.find(t => t.tag == v).tour; 
         });
-        
+
         this.availableTours = this.gpx.getTourList();
         this.currentAnalysis = this.availableTours[0].tour;
 
         /* Setup Header widget */
-        let head = new UIAppInfoWidget(UIWC, '');
-        let tours = this.gpx.getTourList();
-        this.availableTours.forEach(tour => { head.addOption(tour.tag); });
+        this.headerWidget = new UIAppInfoWidget(UIWC, '');
+        this.availableTours.forEach(tour => { this.headerWidget.addOption(tour.tag); });
 
-        this.widgets = [head];
-
-        this.switchTour();
+        this.runCurrentAnalysis();
     }
 
-    set selectedTour (tour) { this.currentAnalysis = tour; this.switchTour(this.currentAnalysis); }
+    set selectedTour (tour) { this.currentAnalysis = tour; this.runCurrentAnalysis(this.currentAnalysis); }
     get selectedTour ()     { return this.currentAnalysis; }
 
-    switchTour = () =>
+    runCurrentAnalysis = () =>
     {
-        console.log(this.currentAnalysis);
-        GPXType.typeCheck(this.currentAnalysis, ['GPXRoute', 'GPXTrack'], []);
         /* Retrieve GPXSurfaceType points from content */
-        this.points = [];
-        if (this.currentAnalysis instanceof GPXRoute) this.points = this.currentAnalysis.content;
-        else this.currentAnalysis.content.forEach(seg => this.points = this.points.concat(seg.content));
+        this.points = this.currentAnalysis.getPoints();
+
+        /* Reset widgets */
+        this.widgets.forEach(w => w.remove());
+        this.widgets = [];
 
         this.bounds = Object.assign(this.currentAnalysis.getExtrema('ele'), 
                                     this.currentAnalysis.getExtrema('time'), 
