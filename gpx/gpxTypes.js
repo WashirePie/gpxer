@@ -122,7 +122,7 @@ class GPXType
         {
             if (!this.validator.validData.includes(attr))
             {
-                GPXConverter.e(`element of type '${this.constructor.name}' contains an illegal attribute '${attr}'!`);
+                GPXConverter.w(`element of type '${this.constructor.name}' contains an illegal attribute '${attr}'. Ignored.`);
                 console.table(this);
             }
         });

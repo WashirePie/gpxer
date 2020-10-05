@@ -43,12 +43,19 @@ class GPXAnalysisBuilder
         let analyzers = [];
         let widgets = [];
         let datasets = [];
-
-        let hasEle =  points.filter(p => p.attributes.hasOwnProperty('ele'))?.length  > points.length * 0.9;
-        let hasLat =  points.filter(p => p.attributes.hasOwnProperty('lat'))?.length  > points.length * 0.9;
-        let hasLon =  points.filter(p => p.attributes.hasOwnProperty('lon'))?.length  > points.length * 0.9;
-        let hasTime = points.filter(p => p.attributes.hasOwnProperty('time'))?.length > points.length * 0.9;
+        
+        let hasEle =  points.every(p => p.attributes.hasOwnProperty('ele'));
+        let hasLat =  points.every(p => p.attributes.hasOwnProperty('lat'));
+        let hasLon =  points.every(p => p.attributes.hasOwnProperty('lon'));
+        let hasTime = points.every(p => p.attributes.hasOwnProperty('time'));
         let hasLatLon = hasLat && hasLon;
+        
+        console.log(`GPXAnalysisBuilder - Analysis Eligibility Check`);
+        console.log(`Total Points: (${points.length})`);
+        console.log(`'ele'-Count:  (${points.filter(p => p.attributes.hasOwnProperty('ele' ))?.length}), Eligibility: ${hasEle}` );
+        console.log(`'lat'-Count:  (${points.filter(p => p.attributes.hasOwnProperty('lat' ))?.length}), Eligibility: ${hasLat}` );
+        console.log(`'lon'-Count:  (${points.filter(p => p.attributes.hasOwnProperty('lon' ))?.length}), Eligibility: ${hasLon}` );
+        console.log(`'time'-Count: (${points.filter(p => p.attributes.hasOwnProperty('time'))?.length}), Eligibility: ${hasTime}`);
 
         if (hasEle)    
         {
@@ -57,7 +64,7 @@ class GPXAnalysisBuilder
 
             let a = new GPXMinMaxGainLossAnalysis(bindingName, 'ele');
             let w = new UIQuadWidget(UIWC, 'span-1 row-2', bindingName, 'arrow_upward', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Gain`, `${bindingName}Loss`);
-            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph, hasTime);
 
             widgets.push(w);
             analyzers.push(a);
@@ -101,7 +108,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'signal_cellular_null', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph, hasTime);
 
             widgets.push(w)
             analyzers.push(a);
@@ -123,7 +130,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'call_made', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph, hasTime);
             
             widgets.push(w)
             analyzers.push(a);
@@ -144,7 +151,7 @@ class GPXAnalysisBuilder
                 }
             );
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'speed', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph, hasTime);
 
             widgets.push(w)
             analyzers.push(a);
@@ -181,7 +188,7 @@ class GPXAnalysisBuilder
             );
 
             let w = new UITripleWidget(UIWC, 'span-1 row-2', bindingName, 'power', unit, `${bindingName}Min`, `${bindingName}Max`, `${bindingName}Avg`);
-            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph);
+            let ds = new UIChartWidgetDataset(bindingName, unit, a.graph, hasTime);
 
             widgets.push(w)
             analyzers.push(a);

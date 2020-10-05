@@ -284,7 +284,7 @@ class UIChartWidgetDataset
 {
     #_dataResolution = 60;
 
-    constructor(title, unit, rawData)
+    constructor(title, unit, rawData, hasTime)
     {
         this._title = title;
         this._unit = unit;
@@ -312,11 +312,17 @@ class UIChartWidgetDataset
         {
             id: this._xAxisId,
             display: false,
-            type: 'time',
+            type: 'linear',
             position: 'bottom',
-            time: { unit: 'minute' },
             gridLines: { display: false }
         };
+
+        this._hasTime = hasTime;
+        if (this._hasTime)
+        {
+            this._xAxisScalesOptions.type = 'time';
+            this._xAxisScalesOptions.time = { unit : 'minute' }
+        }
 
         /*
          * ChartJS Properties
@@ -344,28 +350,36 @@ class UIChartWidgetDataset
 
         this.data = []
 
-        let avgData = 0;
-        let avgDate = 0;
+        let avgY = 0;
+        let avgX = 0;
 
         for ( let i = 1; i <= this._rawData.length; i++)
         {
-            avgData += this._rawData[i - 1].y;
-            avgDate += this._rawData[i - 1].x.getTime();
+            avgY += this._rawData[i - 1].y;
+            avgX += this._hasTime ? this._rawData[i - 1].x.getTime() : i;
 
             if ( i % this.#_dataResolution == 0 )
             {
-                this.data.push({ y: (avgData / this.#_dataResolution).toFixed(3), x: new Date(avgDate / this.#_dataResolution) });
-                avgData = 0;
-                avgDate = 0;
+                let y = (avgY / this.#_dataResolution).toFixed(3)
+                let x = this._hasTime ? new Date(avgX / this.#_dataResolution) : i;
+                
+                this.data.push({ y: y, x: x });
+                
+                avgY = 0;
+                avgX = 0;
             }
         }
 
         /* Add rest if there is any */
-        if ( avgData != 0 )
+        if ( avgY != 0 )
         {
             let rest = this._rawData.length - (this.dataResolution * Math.floor(this._rawData.length / this.#_dataResolution));
-            this.data.push({ y: (avgData / rest).toFixed(3), x: new Date(avgDate / rest) });
+            
+            let y = (avgY / rest).toFixed(3);
+            let x = this._hasTime ? new Date(avgX / rest) : this._rawData.length;
+            this.data.push({ y: y, x: x });
         }
+        console.log(this.data);
     }
 }
 
